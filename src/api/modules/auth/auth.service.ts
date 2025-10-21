@@ -24,8 +24,8 @@ class AuthService {
       throw new ApiError(401, 'Email ou senha inválidos');
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, env.JWT_SECRET as jwt.Secret, {
+      expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
 
     return { token };

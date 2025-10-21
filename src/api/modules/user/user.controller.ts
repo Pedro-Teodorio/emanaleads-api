@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { userService } from './user.service';
+import { ApiError } from '../../../utils/ApiError';
 
 class UserController {
 	async create(req: Request, res: Response, next: NextFunction) {

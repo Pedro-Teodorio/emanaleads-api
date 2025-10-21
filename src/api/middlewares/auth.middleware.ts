@@ -35,7 +35,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
       return next(new ApiError(401, 'Token inválido'));
     }
 
-    req.user = decoded as { id: string; email: string };
+    req.user = decoded as { id: string; email: string, role: string };
     return next();
   });
 };
