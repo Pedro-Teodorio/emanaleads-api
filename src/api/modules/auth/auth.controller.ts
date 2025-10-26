@@ -16,6 +16,19 @@ class AuthController {
 			next(error);
 		}
 	}
+
+	async logout(req: Request, res: Response, next: NextFunction) {
+		try {
+			res.clearCookie('auth-token', {
+				httpOnly: true,
+				sameSite: 'strict',
+			});
+
+			res.status(200).json({ message: 'Logout realizado com sucesso' });
+		} catch (error) {
+			next(error);
+		}
+	}
 }
 
 export const authController = new AuthController();
