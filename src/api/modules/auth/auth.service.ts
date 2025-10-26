@@ -27,7 +27,7 @@ class AuthService {
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, env.JWT_SECRET as jwt.Secret, {
       expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
-
+    
     return { token };
   }
 }

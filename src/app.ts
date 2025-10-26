@@ -1,18 +1,21 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser'; 
 import { apiRoutes } from './api/routes';
 import { errorHandler } from './api/middlewares/errorHandler';
 
 const app = express();
 
-// Middlewares essenciais
-app.use(cors()); // Permite requisições de diferentes origens
-app.use(express.json()); // Habilita o parsing de JSON no corpo das requisições
+const corsOptions = {
+	origin: 'http://localhost:3000',
+	credentials: true,
+};
 
-// Rotas da API
+app.use(cors(corsOptions));
+app.use(cookieParser());
+app.use(express.json());
+
 app.use('/api', apiRoutes);
-
-// Middleware de tratamento de erros (DEVE ser o último)
 app.use(errorHandler);
 
 export { app };
