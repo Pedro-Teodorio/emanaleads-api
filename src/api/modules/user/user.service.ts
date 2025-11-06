@@ -1,61 +1,123 @@
+import { SystemRole } from '@prisma/client';
 import { prisma } from '../../../config/prisma';
 import { ApiError } from '../../../utils/ApiError';
-import { createUserSchema } from './user.validation';
+import { CreateUserData, UpdateUserData } from './user.validation';
 import bcrypt from 'bcrypt';
-import { z } from 'zod';
 
-type CreateUserData = z.infer<typeof createUserSchema>['body'];
+class UserService {
+	async create(data: CreateUserData) {
+		const existingUser = await prisma.user.findUnique({
+			where: { email: data.email },
+		});
 
-const create = async (data: CreateUserData) => {
-	const existingUser = await prisma.user.findUnique({
-		where: { email: data.email },
-	});
+		if (existingUser) {
+			throw new ApiError(400, 'Email já cadastrado');
+		}
 
-	if (existingUser) {
-		throw new ApiError(400, 'Email já cadastrado');
+		const hashedPassword = await bcrypt.hash(data.password, 10);
+
+		const user = await prisma.user.create({
+			data: {
+				...data,
+				password: hashedPassword,
+			},
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				role: true,
+				createdAt: true,
+				updatedAt: true,
+			},
+		});
+
+		return user;
 	}
 
-	const hashedPassword = await bcrypt.hash(data.password, 10);
+	getById = async (id: string) => {
+		const user = await prisma.user.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				role: true,
+				createdAt: true,
+				updatedAt: true,
+			},
+		});
 
-	const user = await prisma.user.create({
-		data: {
-			...data,
-			password: hashedPassword,
-		},
-		select: {
-			id: true,
-			name: true,
-			email: true,
-			role: true,
-			createdAt: true,
-			updatedAt: true,
-		},
-	});
+		if (!user) {
+			throw new ApiError(404, 'Usuário não encontrado');
+		}
 
-	return user;
-};
+		return user;
+	};
 
-const getById = async (id: string) => {
-	const user = await prisma.user.findUnique({
-		where: { id },
-		select: {
-			id: true,
-			name: true,
-			email: true,
-      role: true,
-			createdAt: true,
-			updatedAt: true,
-		},
-	});
-
-	if (!user) {
-		throw new ApiError(404, 'Usuário não encontrado');
+	async listUsersAsRoot() {
+		const users = await prisma.user.findMany({
+			where: {
+				role: {
+					in: [SystemRole.ROOT, SystemRole.ADMIN],
+				},
+			},
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				role: true,
+				createdAt: true,
+			},
+			orderBy: {
+				name: 'asc',
+			},
+		});
+		return users;
 	}
 
-	return user;
-};
+	async updateUserAsRoot(userId: string, data: UpdateUserData) {
+		// 1. Buscar o usuário alvo
+		const targetUser = await this.getById(userId);
 
-export const userService = {
-	create,
-	getById,
-};
+		// 2. Aplicar regra de negócio
+		if (targetUser.role === SystemRole.PROJECT_USER) {
+			throw new ApiError(403, 'Usuários ROOT não podem gerenciar membros de projeto diretamente.');
+		}
+
+		// 3. Preparar dados (ex: hash de senha se ela foi fornecida)
+		const dataToUpdate: { name?: string; email?: string } = {
+			name: data.name,
+			email: data.email,
+		};
+
+		// 4. Atualizar o usuário
+		const updatedUser = await prisma.user.update({
+			where: { id: userId },
+			data: dataToUpdate,
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				role: true,
+				updatedAt: true,
+			},
+		});
+
+		return updatedUser;
+	}
+
+	async deleteUserAsRoot(userId: string) {
+		const targetUser = await this.getById(userId);
+
+		if (targetUser.role === SystemRole.PROJECT_USER) {
+			throw new ApiError(403, 'Usuários ROOT não podem gerenciar membros de projeto diretamente.');
+		}
+		await prisma.user.delete({
+			where: { id: userId },
+		});
+
+		return { message: 'Usuário deletado com sucesso.' };
+	}
+}
+
+export const userService = new UserService();

@@ -9,12 +9,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum SystemRole {
+  ROOT
+  ADMIN
+  PROJECT_USER
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id               String          @id @default(uuid())
+  email            String          @unique
+  name             String
+  password         String
+  role             SystemRole // O papel DESTE usuário no sistema
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  adminOfProjects  ProjectAdmin[]
+  memberOfProjects ProjectMember[]
+}
+
+model Project {
+  id        String          @id @default(uuid())
   name      String
-  password  String
-  role      String   @default("user")
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  admins    ProjectAdmin[]
+  members   ProjectMember[]
+}
+
+// Tabela de Junção Explícita: "Qual ADMIN gerencia qual Projeto"
+model ProjectAdmin {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@unique([userId, projectId])
+}
+
+model ProjectMember {
+  id String @id @default(uuid())
+  userId    String
+  projectId String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([userId, projectId])
 }
