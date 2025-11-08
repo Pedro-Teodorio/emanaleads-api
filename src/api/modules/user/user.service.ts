@@ -14,7 +14,7 @@ class UserService {
 			throw new ApiError(400, 'Email já cadastrado');
 		}
 
-		const hashedPassword = await bcrypt.hash(data.password, 10);
+		const hashedPassword = await bcrypt.hash(data.password || '', 10);
 
 		const user = await prisma.user.create({
 			data: {
@@ -65,7 +65,9 @@ class UserService {
 				id: true,
 				name: true,
 				email: true,
+				phone: true,
 				role: true,
+				status: true,
 				createdAt: true,
 			},
 			orderBy: {
@@ -85,9 +87,12 @@ class UserService {
 		}
 
 		// 3. Preparar dados (ex: hash de senha se ela foi fornecida)
-		const dataToUpdate: { name?: string; email?: string } = {
+		const dataToUpdate: { name?: string; email?: string; phone?: string; status?: 'ACTIVE' | 'INACTIVE'; role?: SystemRole } = {
 			name: data.name,
 			email: data.email,
+			phone: data.phone,
+			status: data.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+			role: data.role,
 		};
 
 		// 4. Atualizar o usuário
@@ -98,6 +103,8 @@ class UserService {
 				id: true,
 				name: true,
 				email: true,
+				phone: true,
+				status: true,
 				role: true,
 				updatedAt: true,
 			},

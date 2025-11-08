@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { projectController } from './project.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createProjectSchema, assignAdminSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema } from './project.validation';
+import { createProjectSchema, assignAdminSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema } from './project.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware';
 
@@ -16,6 +16,31 @@ router.post(
 	validateRole(['ROOT']), // 2. É ROOT?
 	validateRequest(createProjectSchema), // 3. O body (name) é válido?
 	projectController.create, // 4. Executa
+);
+
+// Rota para listar todos os projetos (Somente ROOT)
+router.get(
+	'/',
+	authMiddleware, // 1. Está logado?
+	validateRole(['ROOT']), // 2. É ROOT?
+	projectController.listProjectsAsRoot, // 4. Executa
+);
+
+// Rota para atualizar um projeto (Somente ROOT)
+router.put(
+	'/:projectId',
+	authMiddleware, // 1. Está logado?
+	validateRole(['ROOT']), // 2. É ROOT?
+	validateRequest(updateProjectSchema), // 3. O body (name, description, status) é válido?
+	projectController.update, // 4. Executa
+);
+
+// Rota para deletar um projeto (Somente ROOT)
+router.delete(
+	'/:projectId',
+	authMiddleware, // 1. Está logado?
+	validateRole(['ROOT']), // 2. É ROOT?
+	projectController.delete, // 4. Executa
 );
 
 // Rota para designar um admin a um projeto (Somente ROOT)

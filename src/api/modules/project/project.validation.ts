@@ -3,6 +3,16 @@ import { z } from 'zod';
 export const createProjectSchema = z.object({
 	body: z.object({
 		name: z.string().min(3, 'O nome do projeto deve ter no mínimo 3 caracteres'),
+		description: z.string().optional(),
+		status: z.enum(['PLANING', 'ACTIVE', 'PAUSED', 'COMPLETED']),
+	}),
+});
+
+export const updateProjectSchema = z.object({
+	body: z.object({
+		name: z.string().min(3, 'O nome do projeto deve ter no mínimo 3 caracteres').optional(),
+		description: z.string().optional(),
+		status: z.enum(['PLANING', 'ACTIVE', 'PAUSED', 'COMPLETED']).optional(),
 	}),
 });
 
@@ -36,5 +46,6 @@ export const removeMemberSchema = z.object({
 });
 
 export type CreateProjectData = z.infer<typeof createProjectSchema>['body'];
+export type UpdateProjectData = z.infer<typeof updateProjectSchema>['body'];
 export type AssignAdminData = z.infer<typeof assignAdminSchema>['body'];
 export type AddMemberData = z.infer<typeof addMemberSchema>['body'];

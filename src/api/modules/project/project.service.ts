@@ -1,7 +1,7 @@
 import { SystemRole } from '@prisma/client';
 import { prisma } from '../../../config/prisma';
 import { ApiError } from '../../../utils/ApiError';
-import { AddMemberData, AssignAdminData, CreateProjectData } from './project.validation';
+import { AddMemberData, AssignAdminData, CreateProjectData, UpdateProjectData } from './project.validation';
 
 class ProjectService {
 	async create(data: CreateProjectData) {
@@ -11,6 +11,59 @@ class ProjectService {
 			},
 		});
 		return project;
+	}
+
+	/**
+	 * Lista todos os projetos.
+	 * Regra: Somente ROOT pode chamar.
+	 */
+	async listProjectsAsRoot() {
+		const projects = await prisma.project.findMany();
+		return projects;
+	}
+
+	/**
+	 * Atualiza as informações de um projeto.
+	 * Regra: Somente um ROOT daquele projeto pode chamar.
+	 */
+	async update(data: UpdateProjectData, projectId: string) {
+		// 1. Verificar se o projeto existe
+		const project = await prisma.project.findUnique({
+			where: { id: projectId },
+		});
+
+		if (!project) {
+			throw new ApiError(404, 'Projeto não encontrado.');
+		}
+
+		// 2. Atualizar as informações do projeto
+		const updatedProject = await prisma.project.update({
+			where: { id: projectId },
+			data: {
+				name: data.name,
+				description: data.description,
+				status: data.status,
+			},
+		});
+
+		return updatedProject;
+	}
+
+	async delete(projectId: string) {
+		const project = await prisma.project.findUnique({
+			where: { id: projectId },
+		});
+
+		if (!project) {
+			throw new ApiError(404, 'Projeto não encontrado.');
+		}
+
+		// 2. Deletar o projeto
+		await prisma.project.delete({
+			where: { id: projectId },
+		});
+
+		return { message: 'Projeto deletado com sucesso.' };
 	}
 
 	/**

@@ -15,6 +15,44 @@ class ProjectController {
 	}
 
 	/**
+	 * [ROOT] Lista todos os projetos
+	 */
+	async listProjectsAsRoot(req: Request, res: Response, next: NextFunction) {
+		try {
+			const projects = await projectService.listProjectsAsRoot();
+			res.status(200).json(projects);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
+	 * [ROOT] Atualiza um projeto
+	 */
+	async update(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { projectId } = req.params;
+			const updatedProject = await projectService.update(req.body, projectId);
+			res.status(200).json(updatedProject);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
+	 * [ROOT] Deleta um projeto
+	 */
+	async delete(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { projectId } = req.params;
+			await projectService.delete(projectId);
+			res.status(204).send(); // 204 No Content
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
 	 * [ROOT] Designa um ADMIN para um projeto
 	 */
 	async assignAdmin(req: Request, res: Response, next: NextFunction) {

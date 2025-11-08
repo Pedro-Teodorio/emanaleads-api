@@ -66,6 +66,10 @@ class UserController {
 	async deleteUser(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { id } = req.params; // ID do usuário a ser deletado
+			// Garante que o ROOT logado não pode se auto-deletar
+			if (req.user && req.user.id === id) {
+				return next(new ApiError(400, 'Você não pode deletar seu próprio usuário'));
+			}
 			await userService.deleteUserAsRoot(id);
 			res.status(204).send(); // 204 No Content
 		} catch (error) {
