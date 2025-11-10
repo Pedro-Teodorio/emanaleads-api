@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { projectController } from './project.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema } from './project.validation';
+import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema, listProjectsQuerySchema } from './project.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware';
 
@@ -23,6 +23,7 @@ router.get(
 	'/',
 	authMiddleware, // 1. Está logado?
 	validateRole(['ROOT']), // 2. É ROOT?
+	validateRequest(listProjectsQuerySchema), // 3. Query params válidos?
 	projectController.listProjectsAsRoot, // 4. Executa
 );
 

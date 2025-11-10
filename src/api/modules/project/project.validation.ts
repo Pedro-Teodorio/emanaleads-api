@@ -40,6 +40,15 @@ export const removeMemberSchema = z.object({
 	}),
 });
 
+export const listProjectsQuerySchema = z.object({
+	query: z.object({
+		page: z.string().regex(/^\d+$/, 'Page deve ser um número').optional().default('1'),
+		limit: z.string().regex(/^\d+$/, 'Limit deve ser um número').optional().default('10'),
+		search: z.string().optional(),
+	}),
+});
+
 export type CreateProjectData = z.infer<typeof createProjectSchema>['body'];
 export type UpdateProjectData = z.infer<typeof updateProjectSchema>['body'];
 export type AddMemberData = z.infer<typeof addMemberSchema>['body'];
+export type ListProjectsQueryData = z.infer<typeof listProjectsQuerySchema>['query'];

@@ -19,7 +19,11 @@ class ProjectController {
 	 */
 	async listProjectsAsRoot(req: Request, res: Response, next: NextFunction) {
 		try {
-			const projects = await projectService.listProjectsAsRoot();
+			const page = parseInt(req.query.page as string) || 1;
+			const limit = parseInt(req.query.limit as string) || 10;
+			const search = req.query.search as string;
+
+			const projects = await projectService.listProjectsAsRoot(search, page, limit);
 			res.status(200).json(projects);
 		} catch (error) {
 			next(error);

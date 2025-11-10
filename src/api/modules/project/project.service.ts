@@ -31,18 +31,44 @@ class ProjectService {
 	}
 
 	/**
-	 * Lista todos os projetos.
+	 * Lista todos os projetos de forma paginada.
 	 * Regra: Somente ROOT pode chamar.
 	 */
-	async listProjectsAsRoot() {
-		const projects = await prisma.project.findMany({
-			include: {
-				admin: {
-					select: { id: true, name: true, email: true },
+	async listProjectsAsRoot(search?: string, page: number = 1, limit: number = 10) {
+		const skip = (page - 1) * limit;
+
+		const where: any = {};
+
+		if (search) {
+			where.name = { contains: search, mode: 'insensitive' };
+		}
+
+		const [projects, total] = await Promise.all([
+			prisma.project.findMany({
+				where,
+				include: {
+					admin: {
+						select: { id: true, name: true, email: true },
+					},
 				},
+				orderBy: {
+					createdAt: 'desc',
+				},
+				skip,
+				take: limit,
+			}),
+			prisma.project.count({ where }),
+		]);
+
+		return {
+			data: projects,
+			meta: {
+				total,
+				page,
+				limit,
+				totalPages: Math.ceil(total / limit),
 			},
-		});
-		return projects;
+		};
 	}
 
 	/**
