@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { userController } from './user.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createUserSchema, updateUserSchema } from './user.validation';
+import { createUserSchema, updateUserSchema, listUsersQuerySchema } from './user.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware'; // Importe o validateRole
 
@@ -24,6 +24,7 @@ router.get(
 	'/',
 	authMiddleware, // 1. Logado?
 	validateRole(['ROOT']), // 2. É ROOT?
+	validateRequest(listUsersQuerySchema), // 3. Query params válidos?
 	userController.listUsers,
 );
 

@@ -21,5 +21,14 @@ export const updateUserSchema = z.object({
 	}),
 });
 
+export const listUsersQuerySchema = z.object({
+	query: z.object({
+		page: z.string().regex(/^\d+$/, 'Page deve ser um número').optional().default('1'),
+		limit: z.string().regex(/^\d+$/, 'Limit deve ser um número').optional().default('10'),
+		search: z.string().optional(),
+	}),
+});
+
 export type CreateUserData = z.infer<typeof createUserSchema>['body'];
 export type UpdateUserData = z.infer<typeof updateUserSchema>['body']; // Não permitimos mudar role ou email aqui
+export type ListUsersQueryData = z.infer<typeof listUsersQuerySchema>['query'];

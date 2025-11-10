@@ -54,27 +54,49 @@ class UserService {
 		return user;
 	};
 
-	async listUsersAsRoot() {
-		const users = await prisma.user.findMany({
-			where: {
-				role: {
-					in: [SystemRole.ROOT, SystemRole.ADMIN],
+	async listUsersAsRoot(search?: string, page: number = 1, limit: number = 10) {
+		const skip = (page - 1) * limit;
+
+		const where: any = {
+			role: {
+				in: [SystemRole.ROOT, SystemRole.ADMIN],
+			},
+		};
+
+		if (search) {
+			where.name = { contains: search, mode: 'insensitive' };
+		}
+
+		const [users, total] = await Promise.all([
+			prisma.user.findMany({
+				where,
+				select: {
+					id: true,
+					name: true,
+					email: true,
+					phone: true,
+					role: true,
+					status: true,
+					createdAt: true,
 				},
+				orderBy: {
+					name: 'asc',
+				},
+				skip,
+				take: limit,
+			}),
+			prisma.user.count({ where }),
+		]);
+
+		return {
+			data: users,
+			meta: {
+				total,
+				page,
+				limit,
+				totalPages: Math.ceil(total / limit),
 			},
-			select: {
-				id: true,
-				name: true,
-				email: true,
-				phone: true,
-				role: true,
-				status: true,
-				createdAt: true,
-			},
-			orderBy: {
-				name: 'asc',
-			},
-		});
-		return users;
+		};
 	}
 
 	async updateUserAsRoot(userId: string, data: UpdateUserData) {

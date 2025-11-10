@@ -40,7 +40,11 @@ class UserController {
 	async listUsers(req: Request, res: Response, next: NextFunction) {
 		try {
 			// A rota garante que só o ROOT chama isso
-			const users = await userService.listUsersAsRoot();
+			const page = parseInt(req.query.page as string) || 1;
+			const limit = parseInt(req.query.limit as string) || 10;
+			const search = req.query.search as string;
+
+			const users = await userService.listUsersAsRoot(search, page, limit);
 			res.status(200).json(users);
 		} catch (error) {
 			next(error);
