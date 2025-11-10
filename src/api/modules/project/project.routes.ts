@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { projectController } from './project.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createProjectSchema, assignAdminSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema } from './project.validation';
+import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema } from './project.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware';
 
@@ -41,15 +41,6 @@ router.delete(
 	authMiddleware, // 1. Está logado?
 	validateRole(['ROOT']), // 2. É ROOT?
 	projectController.delete, // 4. Executa
-);
-
-// Rota para designar um admin a um projeto (Somente ROOT)
-router.post(
-	'/assign-admin',
-	authMiddleware, // 1. Está logado?
-	validateRole(['ROOT']), // 2. É ROOT?
-	validateRequest(assignAdminSchema), // 3. O body (userId, projectId) é válido?
-	projectController.assignAdmin, // 4. Executa
 );
 
 // --- Rotas de ADMIN ---

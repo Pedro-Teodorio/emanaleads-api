@@ -80,9 +80,14 @@ class UserService {
 	async updateUserAsRoot(userId: string, data: UpdateUserData) {
 		// 1. Buscar o usuário alvo
 		const targetUser = await this.getById(userId);
+
+		// --- CORREÇÃO AQUI ---
+		// A consulta foi alterada de 'admins: { some: { userId } }' para 'adminId: userId'
 		const projectCount = await prisma.project.count({
-			where: { admins: { some: { userId } } },
+			where: { adminId: userId },
 		});
+		// --- FIM DA CORREÇÃO ---
+
 		// 2. Aplicar regra de negócio
 		if (targetUser.role === SystemRole.PROJECT_USER) {
 			throw new ApiError(403, 'Usuários ROOT não podem gerenciar membros de projeto diretamente.');
@@ -91,11 +96,8 @@ class UserService {
 			throw new ApiError(403, 'Administradores com projetos não podem ser promovidos para ROOT.');
 		}
 
-		if (targetUser.id === userId) {
-			throw new ApiError(400, 'Você não pode atualizar seu próprio usuário.');
-		}
 
-		// 3. Preparar dados (ex: hash de senha se ela foi fornecida)
+		// 3. Preparar dados
 		const dataToUpdate: { name?: string; email?: string; phone?: string; status?: 'ACTIVE' | 'INACTIVE'; role?: SystemRole } = {
 			name: data.name,
 			email: data.email,

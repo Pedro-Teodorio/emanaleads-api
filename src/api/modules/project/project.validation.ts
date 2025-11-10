@@ -18,13 +18,6 @@ export const updateProjectSchema = z.object({
 	}),
 });
 
-export const assignAdminSchema = z.object({
-	body: z.object({
-		userId: z.uuid('Formato de UUID inválido para o ID do usuário (userId)'),
-		projectId: z.uuid('Formato de UUID inválido para o ID do projeto (projectId)'),
-	}),
-});
-
 // Schema para adicionar um PROJECT_USER a um projeto
 export const addMemberSchema = z.object({
 	body: z.object({
@@ -49,5 +42,4 @@ export const removeMemberSchema = z.object({
 
 export type CreateProjectData = z.infer<typeof createProjectSchema>['body'];
 export type UpdateProjectData = z.infer<typeof updateProjectSchema>['body'];
-export type AssignAdminData = z.infer<typeof assignAdminSchema>['body'];
 export type AddMemberData = z.infer<typeof addMemberSchema>['body'];
