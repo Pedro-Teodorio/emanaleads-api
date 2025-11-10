@@ -27,6 +27,18 @@ class ProjectController {
 	}
 
 	/**
+	 * [ROOT] Lista os 5 projetos mais recentes
+	 */
+	async listRecentProjects(req: Request, res: Response, next: NextFunction) {
+		try {
+			const projects = await projectService.listRecentProjects();
+			res.status(200).json(projects);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
 	 * [ROOT] Atualiza um projeto
 	 */
 	async update(req: Request, res: Response, next: NextFunction) {
@@ -47,18 +59,6 @@ class ProjectController {
 			const { projectId } = req.params;
 			await projectService.delete(projectId);
 			res.status(204).send(); // 204 No Content
-		} catch (error) {
-			next(error);
-		}
-	}
-
-	/**
-	 * [ROOT] Designa um ADMIN para um projeto
-	 */
-	async assignAdmin(req: Request, res: Response, next: NextFunction) {
-		try {
-			const assignment = await projectService.assignAdmin(req.body);
-			res.status(201).json(assignment);
 		} catch (error) {
 			next(error);
 		}

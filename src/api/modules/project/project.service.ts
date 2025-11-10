@@ -46,6 +46,18 @@ class ProjectService {
 	}
 
 	/**
+	 * Lista os 5 projetos mais recentes.
+	 * Regra: Somente ROOT pode chamar.
+	 */
+	async listRecentProjects() {
+		const projects = await prisma.project.findMany({
+			orderBy: { createdAt: 'desc' },
+			take: 5,
+		});
+		return projects;
+	}
+
+	/**
 	 * Atualiza as informações de um projeto.
 	 * Regra: Somente um ROOT pode chamar.
 	 */

@@ -26,6 +26,16 @@ router.get(
 	projectController.listProjectsAsRoot, // 4. Executa
 );
 
+// Rota para listar os 5 projetos mais recentes (Somente ROOT)
+router.get(
+	'/recent',
+	authMiddleware, // 1. Está logado?
+	validateRole(['ROOT']), // 2. É ROOT?
+	projectController.listRecentProjects, // 4. Executa
+);
+
+
+
 // Rota para atualizar um projeto (Somente ROOT)
 router.put(
 	'/:projectId',
