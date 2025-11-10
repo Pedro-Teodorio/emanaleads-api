@@ -1,16 +1,39 @@
-import { SystemRole } from '@prisma/client';
+import {  ProjectStatus, SystemRole } from '@prisma/client';
 import { prisma } from '../../../config/prisma';
 import { ApiError } from '../../../utils/ApiError';
 import { AddMemberData, AssignAdminData, CreateProjectData, UpdateProjectData } from './project.validation';
 
 class ProjectService {
 	async create(data: CreateProjectData) {
-		const project = await prisma.project.create({
-			data: {
-				name: data.name,
-			},
+		return await prisma.$transaction(async (tx) => {
+			// 1. Criar o projeto
+			const project = await tx.project.create({
+				data: {
+					name: data.name,
+					description: data.description,
+					status: data.status || ProjectStatus.PLANNING,
+				},
+			});
+
+			// 2. Verificar se o usuário indicado é ADMIN
+			const user = await tx.user.findUnique({
+				where: { id: data.adminId },
+			});
+
+			if (!user || user.role !== SystemRole.ADMIN) {
+				throw new ApiError(400, 'Usuário indicado como admin não é um ADMIN válido.');
+			}
+
+			// 3. Criar a relação ProjectAdmin
+			await tx.projectAdmin.create({
+				data: {
+					userId: data.adminId,
+					projectId: project.id,
+				},
+			});
+
+			return project;
 		});
-		return project;
 	}
 
 	/**
@@ -18,7 +41,11 @@ class ProjectService {
 	 * Regra: Somente ROOT pode chamar.
 	 */
 	async listProjectsAsRoot() {
-		const projects = await prisma.project.findMany();
+		const projects = await prisma.project.findMany({
+			include: {
+				admins: true,
+			},
+		});
 		return projects;
 	}
 
@@ -42,7 +69,7 @@ class ProjectService {
 			data: {
 				name: data.name,
 				description: data.description,
-				status: data.status,
+				status: data.status as ProjectStatus,
 			},
 		});
 
