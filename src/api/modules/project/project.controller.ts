@@ -22,8 +22,9 @@ class ProjectController {
 			const page = parseInt(req.query.page as string) || 1;
 			const limit = parseInt(req.query.limit as string) || 10;
 			const search = req.query.search as string;
+			const status = req.query.status as string | undefined;
 
-			const projects = await projectService.listProjectsAsRoot(search, page, limit);
+			const projects = await projectService.listProjectsAsRoot(search, page, limit, status);
 			res.status(200).json(projects);
 		} catch (error) {
 			next(error);

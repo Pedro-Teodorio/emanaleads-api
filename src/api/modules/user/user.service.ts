@@ -54,15 +54,30 @@ class UserService {
 		return user;
 	};
 
-	async listUsersAsRoot(search?: string, page: number = 1, limit: number = 10) {
+	async listUsersAsRoot(
+		search?: string,
+		page: number = 1,
+		limit: number = 10,
+		roleFilter?: string,
+		statusFilter?: string,
+	) {
 		const skip = (page - 1) * limit;
 
-		const where: any = {
-			role: {
-				in: [SystemRole.ROOT, SystemRole.ADMIN],
-			},
-		};
+		const where: any = {};
 
+		// Filtrar por role, padrão ROOT e ADMIN
+		if (roleFilter) {
+			where.role = roleFilter;
+		} else {
+			where.role = { in: [SystemRole.ROOT, SystemRole.ADMIN] };
+		}
+
+		// Filtrar por status se fornecido
+		if (statusFilter) {
+			where.status = statusFilter;
+		}
+
+		// Busca por nome
 		if (search) {
 			where.name = { contains: search, mode: 'insensitive' };
 		}

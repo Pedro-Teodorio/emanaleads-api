@@ -22,11 +22,13 @@ export const updateUserSchema = z.object({
 });
 
 export const listUsersQuerySchema = z.object({
-	query: z.object({
-		page: z.string().regex(/^\d+$/, 'Page deve ser um número').optional().default('1'),
-		limit: z.string().regex(/^\d+$/, 'Limit deve ser um número').optional().default('10'),
-		search: z.string().optional(),
-	}),
+  query: z.object({
+    page: z.string().regex(/^\d+$/, 'Page deve ser um número').optional().default('1'),
+    limit: z.string().regex(/^\d+$/, 'Limit deve ser um número').optional().default('10'),
+    search: z.string().optional(),
+    role: z.enum(['ROOT', 'ADMIN', 'PROJECT_USER']).optional(),
+    status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+  }),
 });
 
 export type CreateUserData = z.infer<typeof createUserSchema>['body'];

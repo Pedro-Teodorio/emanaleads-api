@@ -1,6 +1,6 @@
-[10/11/2025 13:10:00] Início da tarefa: Implementar Paginação de Projetos no Backend. | SUCESSO | Plano de execução `ai_backend_tasks.md` criado.
-[10/11/2025 13:15:00] Passo 1.7.1: Validação de Schema - Criação de `listProjectsQuerySchema` em `project.validation.ts`. | SUCESSO
-[10/11/2025 13:20:00] Passo 1.7.2: Validação de Rota - Aplicação do schema na rota `GET /api/projects`. | SUCESSO
-[10/11/2025 13:25:00] Passo 1.6: Camada de Controle - Atualização de `listProjectsAsRoot` no `project.controller.ts` para lidar com query params. | SUCESSO
-[10/11/2025 13:30:00] Passo 1.5 & 1.4: Camada de Negócio e Persistência - Atualização de `listProjectsAsRoot` no `project.service.ts` para implementar a lógica de busca e paginação. | SUCESSO
-[10/11/2025 13:35:00] Fase de Implementação Concluída. | INFO
+[11/11/2025 14:30:01] Início da tarefa: Implementar filtro de status em projetos | PENDENTE | Análise inicial da estrutura dos módulos 'user' e 'project'.
+[11/11/2025 14:32:15] Criação do plano de execução `ai_backend_tasks.md` | SUCESSO | Plano detalhado criado para guiar a implementação.
+[11/11/2025 14:33:05] Modificação de `project.validation.ts` | SUCESSO | Adicionada validação para o query param `status`.
+[11/11/2025 14:34:10] Modificação de `project.controller.ts` | SUCESSO | Controller atualizado para extrair `status` da request e passar para o service.
+[11/11/2025 14:35:00] Modificação de `project.service.ts` | SUCESSO | Service atualizado para incluir lógica de filtragem por status na consulta ao banco de dados.
+[11/11/2025 14:36:00] Finalização da tarefa: Implementar filtro de status em projetos | SUCESSO | Todos os critérios de sucesso foram atendidos.

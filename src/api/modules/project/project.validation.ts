@@ -45,6 +45,7 @@ export const listProjectsQuerySchema = z.object({
 		page: z.string().regex(/^\d+$/, 'Page deve ser um número').optional().default('1'),
 		limit: z.string().regex(/^\d+$/, 'Limit deve ser um número').optional().default('10'),
 		search: z.string().optional(),
+		status: z.enum(['PLANNING', 'ACTIVE', 'PAUSED', 'COMPLETED']).optional(),
 	}),
 });
 

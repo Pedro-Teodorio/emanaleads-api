@@ -34,13 +34,18 @@ class ProjectService {
 	 * Lista todos os projetos de forma paginada.
 	 * Regra: Somente ROOT pode chamar.
 	 */
-	async listProjectsAsRoot(search?: string, page: number = 1, limit: number = 10) {
+	async listProjectsAsRoot(search?: string, page: number = 1, limit: number = 10, statusFilter?: string) {
 		const skip = (page - 1) * limit;
 
 		const where: any = {};
 
 		if (search) {
 			where.name = { contains: search, mode: 'insensitive' };
+		}
+
+		// Filtrar por status se fornecido
+		if (statusFilter) {
+			where.status = statusFilter;
 		}
 
 		const [projects, total] = await Promise.all([
