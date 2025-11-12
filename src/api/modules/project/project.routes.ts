@@ -58,10 +58,10 @@ router.delete(
 
 // Rota para adicionar um membro a um projeto (Somente ADMIN)
 router.post(
-	'/add-member',
+	'/:projectId/members',
 	authMiddleware, // 1. Está logado?
 	validateRole(['ADMIN']), // 2. É ADMIN? (A lógica no service confirma SE é admin DO projeto)
-	validateRequest(addMemberSchema), // 3. O body (userId, projectId) é válido?
+	validateRequest(addMemberSchema), // 3. O body (userId) e params (projectId) são válidos?
 	projectController.addMember, // 4. Executa
 );
 

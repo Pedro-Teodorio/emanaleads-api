@@ -20,9 +20,13 @@ export const updateProjectSchema = z.object({
 
 // Schema para adicionar um PROJECT_USER a um projeto
 export const addMemberSchema = z.object({
-	body: z.object({
-		userId: z.uuid('Formato de UUID inválido para o ID do usuário (userId)'),
+	params: z.object({
 		projectId: z.uuid('Formato de UUID inválido para o ID do projeto (projectId)'),
+	}),
+	body: z.object({
+		projectId: z.uuid('Formato de UUID inválido para o ID do projeto (projectId)'),
+		userId: z.uuid('Formato de UUID inválido para o ID do usuário (userId)'),
+
 	}),
 });
 

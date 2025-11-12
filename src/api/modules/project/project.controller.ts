@@ -74,8 +74,10 @@ class ProjectController {
 	 */
 	async addMember(req: Request, res: Response, next: NextFunction) {
 		try {
+			const { projectId } = req.params;
+			const { userId } = req.body;
 			// Passamos o ID do admin logado (de req.user) para o service
-			const member = await projectService.addMember(req.body, req.user!.id);
+			const member = await projectService.addMember({ projectId, userId }, req.user!.id);
 			res.status(201).json(member);
 		} catch (error) {
 			next(error);
