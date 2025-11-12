@@ -1,14 +1,13 @@
-import { SystemRole } from '@prisma/client';
-import { prisma } from '../../../config/prisma';
+import { Prisma, SystemRole } from '@prisma/client';
 import { ApiError } from '../../../utils/ApiError';
 import { CreateUserData, UpdateUserData } from './user.validation';
 import bcrypt from 'bcrypt';
+import { userRepository } from './user.repository';
+import { projectRepository } from '../project/project.repository';
 
 class UserService {
 	async create(data: CreateUserData) {
-		const existingUser = await prisma.user.findUnique({
-			where: { email: data.email },
-		});
+		const existingUser = await userRepository.findByEmail(data.email);
 
 		if (existingUser) {
 			throw new ApiError(400, 'Email já cadastrado');
@@ -16,92 +15,39 @@ class UserService {
 
 		const hashedPassword = await bcrypt.hash(data.password || '', 10);
 
-		const user = await prisma.user.create({
-			data: {
-				...data,
-				password: hashedPassword,
-			},
-			select: {
-				id: true,
-				name: true,
-				email: true,
-				role: true,
-				createdAt: true,
-				updatedAt: true,
-			},
-		});
+		const user = await userRepository.create(data, hashedPassword);
 
 		return user;
 	}
 
-	getById = async (id: string) => {
-		const user = await prisma.user.findUnique({
-			where: { id },
-			select: {
-				id: true,
-				name: true,
-				email: true,
-				role: true,
-				createdAt: true,
-				updatedAt: true,
-			},
-		});
+	async getById(id: string) {
+		const user = await userRepository.findById(id);
 
 		if (!user) {
 			throw new ApiError(404, 'Usuário não encontrado');
 		}
 
 		return user;
-	};
+	}
 
-	async listUsersAsRoot(
-		search?: string,
-		page: number = 1,
-		limit: number = 10,
-		roleFilter?: string,
-		statusFilter?: string,
-	) {
-		const skip = (page - 1) * limit;
+	async listUsersAsRoot(search?: string, page: number = 1, limit: number = 10, roleFilter?: string, statusFilter?: string) {
+		const where: Prisma.UserWhereInput = {};
 
-		const where: any = {};
-
-		// Filtrar por role, padrão ROOT e ADMIN
 		if (roleFilter) {
-			where.role = roleFilter;
+			where.role = roleFilter as SystemRole;
 		} else {
 			where.role = { in: [SystemRole.ROOT, SystemRole.ADMIN] };
 		}
 
-		// Filtrar por status se fornecido
 		if (statusFilter) {
-			where.status = statusFilter;
+			where.status = statusFilter as 'ACTIVE' | 'INACTIVE';
 		}
 
-		// Busca por nome
 		if (search) {
 			where.name = { contains: search, mode: 'insensitive' };
 		}
 
-		const [users, total] = await Promise.all([
-			prisma.user.findMany({
-				where,
-				select: {
-					id: true,
-					name: true,
-					email: true,
-					phone: true,
-					role: true,
-					status: true,
-					createdAt: true,
-				},
-				orderBy: {
-					name: 'asc',
-				},
-				skip,
-				take: limit,
-			}),
-			prisma.user.count({ where }),
-		]);
+		const [users, total] = await Promise.all([userRepository.list(where, page, limit), userRepository.count(where)]);
 
 		return {
 			data: users,
@@ -115,48 +61,25 @@ class UserService {
 	}
 
 	async updateUserAsRoot(userId: string, data: UpdateUserData) {
-		// 1. Buscar o usuário alvo
 		const targetUser = await this.getById(userId);
 
-		// --- CORREÇÃO AQUI ---
-		// A consulta foi alterada de 'admins: { some: { userId } }' para 'adminId: userId'
-		const projectCount = await prisma.project.count({
-			where: { adminId: userId },
-		});
-		// --- FIM DA CORREÇÃO ---
+		const projectCount = await projectRepository.count({ adminId: userId });
 
-		// 2. Aplicar regra de negócio
 		if (targetUser.role === SystemRole.PROJECT_USER) {
 			throw new ApiError(403, 'Usuários ROOT não podem gerenciar membros de projeto diretamente.');
 		}
-		if (targetUser.role === SystemRole.ADMIN && projectCount > 0) {
+		if (targetUser.role === SystemRole.ADMIN && projectCount > 0 && data.role === SystemRole.ROOT) {
 			throw new ApiError(403, 'Administradores com projetos não podem ser promovidos para ROOT.');
 		}
 
+		const dataToUpdate: Prisma.UserUpdateInput = {};
+		if (data.name) dataToUpdate.name = data.name;
+		if (data.email) dataToUpdate.email = data.email;
+		if (data.phone) dataToUpdate.phone = data.phone;
+		if (data.status) dataToUpdate.status = data.status;
+		if (data.role) dataToUpdate.role = data.role;
 
-		// 3. Preparar dados
-		const dataToUpdate: { name?: string; email?: string; phone?: string; status?: 'ACTIVE' | 'INACTIVE'; role?: SystemRole } = {
-			name: data.name,
-			email: data.email,
-			phone: data.phone,
-			status: data.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
-			role: data.role,
-		};
-
-		// 4. Atualizar o usuário
-		const updatedUser = await prisma.user.update({
-			where: { id: userId },
-			data: dataToUpdate,
-			select: {
-				id: true,
-				name: true,
-				email: true,
-				phone: true,
-				status: true,
-				role: true,
-				updatedAt: true,
-			},
-		});
+		const updatedUser = await userRepository.update(userId, dataToUpdate);
 
 		return updatedUser;
 	}
@@ -167,9 +90,7 @@ class UserService {
 		if (targetUser.role === SystemRole.PROJECT_USER) {
 			throw new ApiError(403, 'Usuários ROOT não podem gerenciar membros de projeto diretamente.');
 		}
-		await prisma.user.delete({
-			where: { id: userId },
-		});
+		await userRepository.delete(userId);
 
 		return { message: 'Usuário deletado com sucesso.' };
 	}
