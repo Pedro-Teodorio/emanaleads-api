@@ -39,6 +39,8 @@ model User {
   updatedAt        DateTime        @updatedAt
   adminOfProjects  Project[]       @relation("AdminOfProjects")
   memberOfProjects ProjectMember[]
+
+  @@index([status, role])
 }
 
 model Project {
@@ -52,6 +54,9 @@ model Project {
   admin   User   @relation("AdminOfProjects", fields: [adminId], references: [id])
 
   members ProjectMember[]
+
+  @@index([adminId])
+  @@index([status])
 }
 
 model ProjectMember {

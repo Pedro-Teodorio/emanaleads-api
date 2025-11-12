@@ -1,49 +1,53 @@
-# Plano de Execução da Tarefa: Filtro de Status em Projetos
+# Plano de Execução da Tarefa: Auditoria de Código Backend
 
 ## 1.1. Análise da Arquitetura Backend
 
-- [x] Identificar a tecnologia/framework backend em uso (Express.js com TypeScript)
-- [x] Analisar estrutura de camadas existente (Controller, Service, Prisma como Repositório)
-- [x] Verificar padrões de autenticação e autorização implementados (Middlewares de `auth` e `validateRole`)
-- [x] Validar conformidade com as regras do `AI-INSTRUCTIONS.md`
+- [ ] Identificar a tecnologia/framework backend em uso (Express.js com TypeScript).
+- [ ] Analisar estrutura de camadas existente (Controller, Service, e Prisma como camada de persistência).
+- [ ] Verificar padrões de autenticação e autorização implementados (JWT, middlewares de RBAC).
+- [ ] Validar a estrutura geral do projeto e a separação de módulos.
 
-## 1.2. Análise do Banco de Dados
+## 1.2. Análise do Banco de Dados (Prisma)
 
-- [x] Identificar tipo de banco (SQL/PostgreSQL via Prisma)
-- [x] Analisar schema/models existentes relacionados à tarefa (`Project` e o enum `ProjectStatus`)
-- [x] Verificar migrations e estratégias de versionamento do banco (Prisma Migrate)
-- [x] Identificar relacionamentos e constraints necessários (N/A para esta tarefa)
+- [ ] Analisar o arquivo `prisma/schema.prisma` em detalhes.
+- [ ] Verificar a corretude dos tipos de dados e o uso de atributos (`@id`, `@default`, `@unique`, `@relation`).
+- [ ] Avaliar a nomenclatura de modelos e campos (consistência).
+- [ ] Identificar a necessidade de índices para otimizar consultas comuns (ex: em colunas de status, chaves estrangeiras).
+- [ ] Analisar as migrações existentes para entender a evolução do schema.
 
-## 1.3. Design das APIs
+## 1.3. Análise das APIs e Endpoints
 
-- [x] Definir endpoints RESTful necessários (Modificar `GET /projects`)
-- [x] Especificar estrutura de request/response (Adicionar query param `status`)
-- [x] Definir códigos de status HTTP apropriados para sucesso e erro (200 OK)
-- [x] Estabelecer como a documentação será gerada (N/A, mas seguir padrão se houver)
+- [ ] Mapear todos os endpoints a partir de `src/api/routes.ts` e dos arquivos de rotas modulares.
+- [ ] Verificar a consistência do design RESTful (uso de verbos HTTP, nomenclatura de recursos no plural).
+- [ ] Analisar a estrutura de request/response, incluindo o uso de códigos de status HTTP.
+- [ ] Avaliar a paginação e os filtros (consistência na implementação entre os módulos).
 
-## 1.4. Plano de Implementação da Camada de Persistência
+## 1.4. Análise das Validações e Regras de Negócio
 
-- [ ] Modificar `project.service.ts` para incluir o filtro de status na query do Prisma.
+- [ ] Revisar todos os schemas de validação Zod em `*.validation.ts` para cada módulo.
+- [ ] Verificar se as validações são suficientemente rigorosas e cobrem os casos de borda.
+- [ ] Analisar a lógica de negócio na camada de serviço (`*.service.ts`).
+- [ ] Checar o tratamento de erros e o uso da classe `ApiError`.
+- [ ] Validar a implementação das regras de RBAC nos middlewares e serviços.
 
-## 1.5. Plano de Implementação da Camada de Negócio (Services)
+## 1.5. Análise de Boas Práticas (Clean Code, SOLID, KISS)
 
-- [ ] Atualizar a assinatura do método `listProjectsAsRoot` em `project.service.ts` para aceitar o novo parâmetro de filtro.
+- [ ] **Clean Code:** Avaliar a legibilidade, uso de nomes significativos, tamanho e complexidade de funções/métodos.
+- [ ] **SOLID:**
+    - **SRP:** Verificar se controllers, services e outros componentes têm responsabilidades únicas e bem definidas.
+    - **OCP/DIP:** Analisar se o código favorece a composição e o uso de abstrações em vez de acoplamento direto.
+- [ ] **KISS:** Identificar se existem complexidades desnecessárias que poderiam ser simplificadas.
+- [ ] Avaliar o uso de `async/await` e o tratamento de promises.
 
-## 1.6. Plano de Implementação da Camada de Controle (Controllers)
+## 1.6. Plano de Criação do Relatório
 
-- [ ] Atualizar `project.controller.ts` para extrair o parâmetro `status` da query string.
-- [ ] Adicionar validação para o novo parâmetro `status` em `project.validation.ts`.
+- [ ] Estruturar o arquivo `CODE_REVIEW.md` com seções claras para cada área analisada.
+- [ ] Para cada seção, listar os pontos positivos (boas práticas encontradas).
+- [ ] Para cada seção, listar os pontos de melhoria com sugestões claras e exemplos de código, se aplicável.
+- [ ] Concluir o relatório com um resumo geral do estado do projeto e as principais recomendações.
 
-## 1.7. Plano de Testes e Validação
+## 1.7. Critérios de Sucesso para a Tarefa
 
-- [ ] Definir checklist para testes unitários (N/A neste escopo)
-- [ ] Definir checklist para testes de integração (Verificar se a API retorna projetos filtrados corretamente por status)
-- [ ] Validar rotas de autenticação e autorização (Garantir que apenas `ROOT` pode listar projetos)
-- [ ] Testar cenários de erro e casos de borda (Filtro com status inválido, filtro com status válido mas sem resultados)
-
-## 1.8. Critérios de Sucesso para a Tarefa
-
-- [ ] A API `GET /projects` aceita um query param `status`.
-- [ ] A API retorna a lista de projetos filtrada corretamente pelo status fornecido.
-- [ ] A validação impede o uso de valores de status inválidos.
-- [ ] A funcionalidade existente (paginação, busca por nome) continua funcionando em conjunto com o novo filtro.
+- [ ] A análise cobre todos os pontos definidos no plano.
+- [ ] O arquivo `CODE_REVIEW.md` é criado na raiz do projeto `emanaleads-api`.
+- [ ] O relatório é claro, objetivo e fornece insights acionáveis para melhorar a qualidade do código.
