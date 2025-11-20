@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { projectController } from './project.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema, listProjectsQuerySchema } from './project.validation';
+import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema, listProjectsQuerySchema, deleteProjectParamsSchema } from './project.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware';
 
@@ -35,14 +35,12 @@ router.get(
 	projectController.listRecentProjects, // 4. Executa
 );
 
-
-
 // Rota para atualizar um projeto (Somente ROOT)
 router.put(
 	'/:projectId',
 	authMiddleware, // 1. Está logado?
 	validateRole(['ROOT']), // 2. É ROOT?
-	validateRequest(updateProjectSchema), // 3. O body (name, description, status) é válido?
+	validateRequest(updateProjectSchema), // 3. Params + body válidos?
 	projectController.update, // 4. Executa
 );
 
@@ -51,6 +49,7 @@ router.delete(
 	'/:projectId',
 	authMiddleware, // 1. Está logado?
 	validateRole(['ROOT']), // 2. É ROOT?
+	validateRequest(deleteProjectParamsSchema), // 3. Param válido?
 	projectController.delete, // 4. Executa
 );
 

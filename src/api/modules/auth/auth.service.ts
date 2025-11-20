@@ -1,5 +1,5 @@
 import { ApiError } from '../../../utils/ApiError';
-import { loginSchema } from './auth.validation';
+import { loginSchema, passwordPolicy } from './auth.validation';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { env } from '../../../config/env';
@@ -10,9 +10,13 @@ type LoginData = z.infer<typeof loginSchema>['body'];
 
 class AuthService {
 	async login(data: LoginData) {
+		// Checagem redundante de política de senha (defesa em profundidade)
+		if (!passwordPolicy.test(data.password)) {
+			throw new ApiError(400, 'Senha não atende à política de complexidade');
+		}
 		const user = await userRepository.findByEmail(data.email);
 
-		if (!user || !user.password) {
+		if (!user?.password) {
 			throw new ApiError(401, 'Email ou senha inválidos');
 		}
 

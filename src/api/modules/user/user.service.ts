@@ -5,6 +5,8 @@ import bcrypt from 'bcrypt';
 import { userRepository } from './user.repository';
 import { projectRepository } from '../project/project.repository';
 
+const SALT_ROUNDS = 10;
+
 class UserService {
 	async create(data: CreateUserData) {
 		const existingUser = await userRepository.findByEmail(data.email);
@@ -13,7 +15,7 @@ class UserService {
 			throw new ApiError(400, 'Email já cadastrado');
 		}
 
-		const hashedPassword = await bcrypt.hash(data.password || '', 10);
+		const hashedPassword = await bcrypt.hash(data.password || '', SALT_ROUNDS);
 
 		const user = await userRepository.create(data, hashedPassword);
 

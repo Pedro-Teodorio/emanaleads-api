@@ -124,6 +124,82 @@ Para abrir o Prisma Studio e visualizar os dados no banco:
 pnpm prisma studio
 ```
 
+## Observabilidade & Performance 📊
+
+A API implementa padrões de observabilidade e otimização para facilitar monitoramento, depuração e escalabilidade.
+
+### Logging Estruturado 📝
+
+Utiliza **Pino** para logging estruturado com níveis configuráveis:
+
+-   **Configuração**: Defina `LOG_LEVEL` no `.env` (`trace`, `debug`, `info`, `warn`, `error`, `fatal`)
+-   **Output**: Logs incluem metadados contextuais (método HTTP, path, duração, status code)
+-   **Arquivos**:
+    -   `src/utils/logger.ts`: instância centralizada do logger
+    -   `src/api/middlewares/requestLogger.middleware.ts`: loga cada requisição (início/fim)
+    -   `src/api/middlewares/errorHandler.ts`: loga erros com contexto completo
+
+Exemplo de log:
+
+```json
+{
+	"level": "info",
+	"method": "GET",
+	"path": "/api/users",
+	"statusCode": 200,
+	"durationMs": 42.5,
+	"msg": "request:finish"
+}
+```
+
+### Métricas Simples 📈
+
+Middleware de métricas (`src/api/middlewares/metrics.middleware.ts`) acumula:
+
+-   **Total de requisições**
+-   **Total de erros** (status >= 500)
+-   **Latência média** (em ms)
+
+Snapshot logado automaticamente a cada 60s via logger.
+
+### Health Check ✅
+
+Endpoint público `GET /api/health` retorna:
+
+```json
+{
+	"status": "ok",
+	"uptime": 123.45,
+	"timestamp": 1700000000000,
+	"memory": 52428800,
+	"pid": 1234,
+	"host": "hostname"
+}
+```
+
+### Rate Limiting 🚦
+
+Proteção contra abuso em endpoints sensíveis (ex.: `/api/auth/login`):
+
+-   **Implementação**: `src/api/middlewares/rateLimit.middleware.ts`
+-   **Estratégia atual**: In-memory (Map) com chave composta `IP:email`
+-   **Configuração**: `RATE_LIMIT_MAX_REQUESTS` e `RATE_LIMIT_WINDOW_MINUTES` no `.env`
+-   **Abstração**: Interface `RateLimiter` permite futura troca para Redis sem alterar rotas
+-   **Stub Redis**: `RedisRateLimiter` preparado; ative com `REDIS_URL` no `.env` (implementação real pendente)
+
+### Otimizações de Query 🔍
+
+-   **Selects seletivos**: Repositories (`user.repository.ts`, `project.repository.ts`) retornam apenas campos necessários
+-   **Caching frontend**: React Query configurado com `staleTime` (30s) e `cacheTime` (5min) para reduzir chamadas desnecessárias
+-   **Índices Prisma**: Campos filtrados/ordenados possuem índices (`User.status`, `User.role`, `Project.status`, etc.)
+
+### Próximos Passos (Roadmap P2) 🛣️
+
+-   Implementar cliente Redis real para rate limiting distribuído
+-   Adicionar exportação de métricas (Prometheus, StatsD)
+-   Integrar APM (Application Performance Monitoring) como New Relic ou Datadog
+-   Implementar tracing distribuído (OpenTelemetry)
+
 ## Contribuição 🤝
 
 1. Faça um fork do projeto.

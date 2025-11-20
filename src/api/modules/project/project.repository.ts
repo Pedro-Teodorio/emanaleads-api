@@ -14,9 +14,7 @@ class ProjectRepository {
 		});
 	}
 
-	async findUnique<T extends Prisma.ProjectFindUniqueArgs>(
-		args: Prisma.SelectSubset<T, Prisma.ProjectFindUniqueArgs>
-	): Promise<Prisma.ProjectGetPayload<T> | null> {
+	async findUnique<T extends Prisma.ProjectFindUniqueArgs>(args: Prisma.SelectSubset<T, Prisma.ProjectFindUniqueArgs>): Promise<Prisma.ProjectGetPayload<T> | null> {
 		return prisma.project.findUnique(args);
 	}
 
@@ -40,6 +38,15 @@ class ProjectRepository {
 	listRecent() {
 		return prisma.project.findMany({
 			orderBy: { createdAt: 'desc' },
+			select: {
+				id: true,
+				name: true,
+				description: true,
+				status: true,
+				createdAt: true,
+				updatedAt: true,
+				adminId: true,
+			},
 			take: 5,
 		});
 	}

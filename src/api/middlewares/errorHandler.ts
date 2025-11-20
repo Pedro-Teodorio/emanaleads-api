@@ -1,18 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../../utils/ApiError';
+import { logger } from '../../utils/logger';
 
-export const errorHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  console.error(err); // Log do erro para depuração
+export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+	const baseMeta = { method: req.method, path: req.originalUrl };
 
-  if (err instanceof ApiError) {
-    return res.status(err.statusCode).json({ message: err.message });
-  }
+	if (err instanceof ApiError) {
+		logger.warn({ ...baseMeta, statusCode: err.statusCode, code: err.code }, err.message);
+		return res.status(err.statusCode).json({ code: err.code || 'ERROR', message: err.message });
+	}
 
-  // Para erros inesperados
-  return res.status(500).json({ message: 'Erro interno do servidor.' });
+	logger.error({ ...baseMeta }, err.message || 'Unhandled error');
+	return res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Erro interno do servidor.' });
 };

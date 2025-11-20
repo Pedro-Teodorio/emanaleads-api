@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { userController } from './user.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createUserSchema, updateUserSchema, listUsersQuerySchema } from './user.validation';
+import { createUserSchema, updateUserSchema, listUsersQuerySchema, deleteUserParamsSchema } from './user.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware'; // Importe o validateRole
 
@@ -48,6 +48,7 @@ router.delete(
 	'/:id',
 	authMiddleware, // 1. Logado?
 	validateRole(['ROOT']), // 2. É ROOT?
+	validateRequest(deleteUserParamsSchema), // 3. Param id válido?
 	userController.deleteUser,
 );
 

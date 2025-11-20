@@ -1,4 +1,4 @@
-import { Prisma, SystemRole } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../../config/prisma';
 import { CreateUserData } from './user.validation';
 
@@ -36,7 +36,6 @@ class UserRepository {
 				email: true,
 				role: true,
 				createdAt: true,
-				updatedAt: true,
 			},
 		});
 	}
