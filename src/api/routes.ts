@@ -3,6 +3,7 @@ import os from 'node:os';
 import { userRoutes } from './modules/user/user.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { projectRoutes } from './modules/project/project.routes';
+import { leadRoutes } from './modules/lead/lead.routes';
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.get('/health', (req, res) => {
 router.use('/users', userRoutes);
 router.use('/auth', authRoutes);
 router.use('/projects', projectRoutes);
+router.use('/leads', leadRoutes);
 
 export const apiRoutes = router;

@@ -27,6 +27,16 @@ enum ProjectStatus {
   COMPLETED
 }
 
+// Status do funil de Lead
+enum LeadStatus {
+  PRIMEIRO_CONTATO
+  REUNIAO
+  PROPOSTA_ENVIADA
+  ANALISE_PROPOSTA
+  FECHADO_GANHO
+  FECHADO_PERDIDO
+}
+
 model User {
   id               String          @id @default(uuid())
   email            String          @unique
@@ -39,6 +49,8 @@ model User {
   updatedAt        DateTime        @updatedAt
   adminOfProjects  Project[]       @relation("AdminOfProjects")
   memberOfProjects ProjectMember[]
+  assignedLeads    Lead[]          @relation("AssignedUserLeads")
+  leadStatusChanges LeadHistory[]  @relation("LeadStatusChangesByUser")
 
   @@index([status, role])
 }
@@ -54,6 +66,7 @@ model Project {
   admin   User   @relation("AdminOfProjects", fields: [adminId], references: [id])
 
   members ProjectMember[]
+  leads   Lead[]
 
   @@index([adminId])
   @@index([status])
@@ -68,4 +81,42 @@ model ProjectMember {
   createdAt DateTime @default(now())
 
   @@unique([userId, projectId])
+}
+
+model Lead {
+  id             String      @id @default(uuid())
+  name           String
+  email          String?     // contato opcional
+  phone          String?     // contato opcional
+  position       String?     // cargo do lead
+  requestType    String?     // tipo de serviço solicitado (solicitacao)
+  status         LeadStatus  @default(PRIMEIRO_CONTATO)
+  projectId      String
+  project        Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedUserId String?
+  assignedUser   User?       @relation("AssignedUserLeads", fields: [assignedUserId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?   // soft delete
+  history        LeadHistory[]
+
+  @@index([status, projectId])
+  @@index([email])
+  @@index([phone])
+  @@index([assignedUserId])
+}
+
+model LeadHistory {
+  id              String      @id @default(uuid())
+  leadId          String
+  lead            Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  fromStatus      LeadStatus?
+  toStatus        LeadStatus
+  changedByUserId String?
+  changedBy       User?       @relation("LeadStatusChangesByUser", fields: [changedByUserId], references: [id])
+  reason          String?     // motivo da mudança (perda/ganho etc)
+  createdAt       DateTime    @default(now())
+
+  @@index([leadId])
+  @@index([toStatus])
 }

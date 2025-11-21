@@ -200,6 +200,113 @@ Proteção contra abuso em endpoints sensíveis (ex.: `/api/auth/login`):
 -   Integrar APM (Application Performance Monitoring) como New Relic ou Datadog
 -   Implementar tracing distribuído (OpenTelemetry)
 
+## Módulo Leads 🧲
+
+O módulo de Leads fornece gerenciamento de prospects vinculados a projetos, incluindo histórico de transições de status e regras de acesso baseadas em perfil (ROOT, ADMIN, PROJECT_USER).
+
+### Modelo & Status
+
+-   **LeadStatus enum**: `PRIMEIRO_CONTATO`, `REUNIAO`, `PROPOSTA_ENVIADA`, `ANALISE_PROPOSTA`, `FECHADO_GANHO`, `FECHADO_PERDIDO`.
+-   Histórico mantido em `LeadHistory` com (`fromStatus`, `toStatus`, `changedByUserId`, `reason`, `createdAt`). Campo `reason` obrigatório quando `toStatus` é final (`FECHADO_GANHO` ou `FECHADO_PERDIDO`).
+-   Soft delete via campo `deletedAt` (listagens e busca por ID ignoram leads deletados).
+
+### Regras de Transição de Status
+
+| De               | Para permitidos                   |
+| ---------------- | --------------------------------- |
+| PRIMEIRO_CONTATO | REUNIAO, PROPOSTA_ENVIADA         |
+| REUNIAO          | PROPOSTA_ENVIADA                  |
+| PROPOSTA_ENVIADA | ANALISE_PROPOSTA, FECHADO_PERDIDO |
+| ANALISE_PROPOSTA | FECHADO_GANHO, FECHADO_PERDIDO    |
+| FECHADO_GANHO    | (sem transições)                  |
+| FECHADO_PERDIDO  | (sem transições)                  |
+
+### RBAC & Ownership
+
+-   ROOT: acesso total a todos os leads.
+-   ADMIN: apenas leads de projetos onde ele é `adminId`.
+-   PROJECT_USER: apenas leads atribuídos a ele (`assignedUserId`).
+
+### Endpoints
+
+| Método | Rota                        | Descrição                               | Perfis                    |
+| ------ | --------------------------- | --------------------------------------- | ------------------------- |
+| POST   | `/api/leads`                | Criar lead                              | ROOT, ADMIN, PROJECT_USER |
+| GET    | `/api/leads`                | Listar leads (com filtros/paginação)    | ROOT, ADMIN, PROJECT_USER |
+| GET    | `/api/leads/:leadId`        | Obter lead por ID (ignora soft deleted) | ROOT, ADMIN, PROJECT_USER |
+| PUT    | `/api/leads/:leadId`        | Atualizar campos gerais do lead         | ROOT, ADMIN, PROJECT_USER |
+| PATCH  | `/api/leads/:leadId/status` | Atualizar status (valida transição)     | ROOT, ADMIN, PROJECT_USER |
+| DELETE | `/api/leads/:leadId`        | Soft delete do lead                     | ROOT, ADMIN, PROJECT_USER |
+
+### Parâmetros de Criação (Body)
+
+```json
+{
+	"name": "string",
+	"email": "email opcional",
+	"phone": "string opcional",
+	"projectId": "uuid",
+	"assignedUserId": "uuid opcional",
+	"position": "string opcional",
+	"requestType": "string opcional"
+}
+```
+
+Pelo menos um contato (`email` ou `phone`) deve ser informado.
+
+### Atualização de Status (Body)
+
+```json
+{
+	"toStatus": "REUNIAO",
+	"reason": "string obrigatória se status final"
+}
+```
+
+### Filtros & Query Params (`GET /api/leads`)
+
+| Param            | Tipo     | Exemplo                                | Observação                         |
+| ---------------- | -------- | -------------------------------------- | ---------------------------------- |
+| `page`           | number   | `1`                                    | Default 1                          |
+| `limit`          | number   | `10`                                   | Default 10                         |
+| `projectId`      | uuid     | `def3a2c6-b0c3-4a93-95ec-61d112e044a1` | Filtra por projeto                 |
+| `status`         | enum     | `REUNIAO`                              | Um único status                    |
+| `statuses`       | csv      | `REUNIAO,PROPOSTA_ENVIADA`             | Múltiplos status                   |
+| `search`         | string   | `joao`                                 | Nome / email / telefone (contains) |
+| `assignedUserId` | uuid     | `user-uuid`                            | Leads atribuídos a usuário         |
+| `unassigned`     | bool     | `true`                                 | Somente leads sem `assignedUserId` |
+| `requestType`    | string   | `consultoria`                          | Contains insensitive               |
+| `position`       | string   | `CTO`                                  | Contains insensitive               |
+| `dateFrom`       | ISO date | `2025-11-01T00:00:00Z`                 | Intervalo criação inicial          |
+| `dateTo`         | ISO date | `2025-11-30T23:59:59Z`                 | Intervalo criação final            |
+| `orderBy`        | enum     | `createdAt` / `updatedAt` / `name`     | Campo ordenação                    |
+| `order`          | enum     | `asc` / `desc`                         | Direção                            |
+
+### Resposta de Listagem
+
+```json
+{
+	"data": [{ "id": "...", "name": "...", "status": "PRIMEIRO_CONTATO" }],
+	"meta": { "total": 1, "page": 1, "limit": 10, "totalPages": 1 }
+}
+```
+
+### Erros Comuns
+
+| Status | Motivo                                   |
+| ------ | ---------------------------------------- |
+| 401    | Sem autenticação                         |
+| 403    | Acesso negado (ownership / RBAC)         |
+| 404    | Lead não encontrado (inclui soft delete) |
+| 409    | Lead duplicado (email/phone no projeto)  |
+| 422    | Transição de status inválida             |
+
+### Regras de Negócio Reforçadas
+
+-   Duplicate check por `email` ou `phone` dentro do mesmo projeto.
+-   PROJECT_USER só visualiza/atua sobre leads atribuídos a ele.
+-   Histórico criado em toda mudança inicial de criação e transição de status.
+
 ## Contribuição 🤝
 
 1. Faça um fork do projeto.
