@@ -27,6 +27,9 @@ router.get(
 	projectController.listProjectsAsRoot, // 4. Executa
 );
 
+// Rota para listar projetos do ADMIN atual (Somente ADMIN)
+router.get('/mine', authMiddleware, validateRole(['ADMIN']), projectController.listProjectsAsAdmin);
+
 // Rota para listar os 5 projetos mais recentes (Somente ROOT)
 router.get(
 	'/recent',

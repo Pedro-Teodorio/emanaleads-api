@@ -4,6 +4,7 @@ import { userRoutes } from './modules/user/user.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { projectRoutes } from './modules/project/project.routes';
 import { leadRoutes } from './modules/lead/lead.routes';
+import { campaignRoutes } from './modules/campaign/campaign.routes';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.get('/health', (req, res) => {
 router.use('/users', userRoutes);
 router.use('/auth', authRoutes);
 router.use('/projects', projectRoutes);
+router.use('/projects', campaignRoutes);
 router.use('/leads', leadRoutes);
 
 export const apiRoutes = router;

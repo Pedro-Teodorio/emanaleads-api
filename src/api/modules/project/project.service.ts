@@ -26,10 +26,7 @@ class ProjectService {
 			where.status = statusFilter as ProjectStatus;
 		}
 
-		const [projects, total] = await Promise.all([
-			projectRepository.list(where, page, limit),
-			projectRepository.count(where),
-		]);
+		const [projects, total] = await Promise.all([projectRepository.list(where, page, limit), projectRepository.count(where)]);
 
 		return {
 			data: projects,
@@ -44,6 +41,13 @@ class ProjectService {
 
 	async listRecentProjects() {
 		return projectRepository.listRecent();
+	}
+
+	async listProjectsAsAdmin(adminId: string) {
+		// Lista todos os projetos onde adminId === current user
+		const where: Prisma.ProjectWhereInput = { adminId };
+		const [projects, total] = await Promise.all([projectRepository.list(where, 1, 1000), projectRepository.count(where)]);
+		return { data: projects, meta: { total, page: 1, limit: 1000, totalPages: 1 } };
 	}
 
 	async update(data: UpdateProjectData, projectId: string) {
@@ -131,7 +135,6 @@ class ProjectService {
 
 		const members = await projectRepository.listMembers(projectId);
 
-		
 		return { admin: project.adminId, members };
 	}
 

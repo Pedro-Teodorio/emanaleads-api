@@ -44,6 +44,18 @@ class ProjectController {
 	}
 
 	/**
+	 * [ADMIN] Lista projetos administrados pelo usuário atual
+	 */
+	async listProjectsAsAdmin(req: Request, res: Response, next: NextFunction) {
+		try {
+			const projects = await projectService.listProjectsAsAdmin(req.user!.id);
+			res.status(200).json(projects);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
 	 * [ROOT] Atualiza um projeto
 	 */
 	async update(req: Request, res: Response, next: NextFunction) {

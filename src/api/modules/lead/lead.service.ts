@@ -31,7 +31,7 @@ class LeadService {
 		if (duplicate) throw new ApiError(409, 'Lead duplicado no projeto');
 
 		const lead = await leadRepository.create(data);
-		await leadRepository.addHistory(lead.id, null, lead.status , currentUser.id, null);
+		await leadRepository.addHistory(lead.id, null, lead.status, currentUser.id, null);
 		return lead;
 	}
 
@@ -43,14 +43,12 @@ class LeadService {
 	}
 
 	async list(filters: ListLeadsQueryData, currentUser: { id: string; role: string }) {
-		const result = await leadRepository.list(filters);
 		if (currentUser.role === 'PROJECT_USER') {
-			return {
-				data: result.data.filter((l) => l.assignedUserId === currentUser.id),
-				meta: result.meta,
-			};
+			// Aplicar filtro no banco para garantir paginação consistente
+			const filtered = await leadRepository.list({ ...filters, assignedUserId: currentUser.id } as any);
+			return filtered;
 		}
-		return result;
+		return await leadRepository.list(filters);
 	}
 
 	async update(id: string, data: UpdateLeadData, currentUser: { id: string; role: string }) {

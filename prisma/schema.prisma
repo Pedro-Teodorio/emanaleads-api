@@ -67,6 +67,7 @@ model Project {
 
   members ProjectMember[]
   leads   Lead[]
+  campaigns Campaign[]
 
   @@index([adminId])
   @@index([status])
@@ -119,4 +120,30 @@ model LeadHistory {
 
   @@index([leadId])
   @@index([toStatus])
+}
+
+model Campaign {
+  id                 String   @id @default(uuid())
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name               String
+  // Representação de período: mês/ano de pagamento e da campanha
+  monthPayment       Int      // 1..12
+  yearPayment        Int
+  monthCampaign      Int      // 1..12
+  yearCampaign       Int
+  // Métricas base (valores de entrada)
+  clicks             Int      @default(0)
+  conversions        Int      @default(0)
+  qualified          Int      @default(0)
+  sales              Int      @default(0)
+  investmentGoogleAds Decimal  @default(0)
+  investmentTotal     Decimal  @default(0)
+  approvalsRate      Float?
+  goalQualifiedConv  Float?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([yearCampaign, monthCampaign])
 }
