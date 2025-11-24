@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { projectController } from './project.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema, listProjectsQuerySchema, deleteProjectParamsSchema } from './project.validation';
+import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema, listProjectsQuerySchema, deleteProjectParamsSchema, createAndAddMemberSchema } from './project.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware';
 
@@ -66,6 +66,9 @@ router.post(
 	validateRequest(addMemberSchema), // 3. O body (userId) e params (projectId) são válidos?
 	projectController.addMember, // 4. Executa
 );
+
+// Rota para criar novo PROJECT_USER e adicionar como membro (Somente ADMIN)
+router.post('/:projectId/members/new', authMiddleware, validateRole(['ADMIN']), validateRequest(createAndAddMemberSchema), projectController.createAndAddMember);
 
 // Rota GET /projects/:projectId/users (Listar usuários do projeto)
 // Regra: ADMIN daquele projeto vê Admins e Membros

@@ -2,6 +2,12 @@ import { prisma } from '../../../config/prisma';
 import { Prisma, LeadStatus } from '@prisma/client';
 import { ListLeadsQueryData, CreateLeadData, UpdateLeadData } from './lead.validation';
 
+// Tipo interno garantindo que projectId e assignedUserId foram resolvidos
+type ResolvedLeadData = CreateLeadData & {
+	projectId: string;
+	assignedUserId: string;
+};
+
 const leadSelect = {
 	id: true,
 	name: true,
@@ -17,7 +23,7 @@ const leadSelect = {
 };
 
 export class LeadRepository {
-	async create(data: CreateLeadData) {
+	async create(data: ResolvedLeadData) {
 		return prisma.lead.create({
 			data: {
 				name: data.name,
@@ -99,11 +105,7 @@ export class LeadRepository {
 	private applySearchFilter(where: Prisma.LeadWhereInput, filters: ListLeadsQueryData) {
 		if (filters.search?.trim()) {
 			const s = filters.search.trim();
-			where.OR = [
-				{ name: { contains: s, mode: 'insensitive' } },
-				{ email: { contains: s, mode: 'insensitive' } },
-				{ phone: { contains: s, mode: 'insensitive' } },
-			];
+			where.OR = [{ name: { contains: s, mode: 'insensitive' } }, { email: { contains: s, mode: 'insensitive' } }, { phone: { contains: s, mode: 'insensitive' } }];
 		}
 	}
 

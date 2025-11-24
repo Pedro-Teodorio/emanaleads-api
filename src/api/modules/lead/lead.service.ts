@@ -15,7 +15,50 @@ const allowedTransitions: Record<LeadStatus, LeadStatus[]> = {
 
 class LeadService {
 	async create(data: CreateLeadData, currentUser: { id: string; role: string }) {
-		const project = await prisma.project.findUnique({ where: { id: data.projectId }, select: { id: true, status: true, adminId: true } });
+		// Inferir projectId e assignedUserId do contexto se não fornecidos
+		const projectId = await this.inferProjectId(data.projectId, currentUser);
+		const assignedUserId = data.assignedUserId || currentUser.id;
+
+		const project = await this.validateProjectAccess(projectId, currentUser);
+
+		const duplicate = await leadRepository.findDuplicateInProject(project.id, data.email, data.phone);
+		if (duplicate) throw new ApiError(409, 'Lead duplicado no projeto');
+
+		const lead = await leadRepository.create({ ...data, projectId, assignedUserId });
+		await leadRepository.addHistory(lead.id, null, lead.status, currentUser.id, null);
+		return lead;
+	}
+
+	private async inferProjectId(providedProjectId: string | undefined, currentUser: { id: string; role: string }): Promise<string> {
+		if (providedProjectId) return providedProjectId;
+
+		if (currentUser.role === 'ROOT') {
+			throw new ApiError(400, 'ROOT deve especificar projectId explicitamente');
+		}
+
+		if (currentUser.role === 'ADMIN') {
+			const adminProject = await prisma.project.findFirst({
+				where: { adminId: currentUser.id, status: 'ACTIVE' },
+				select: { id: true },
+			});
+			if (!adminProject) throw new ApiError(422, 'Nenhum projeto ativo encontrado para este administrador');
+			return adminProject.id;
+		}
+
+		if (currentUser.role === 'PROJECT_USER') {
+			const membership = await prisma.projectMember.findFirst({
+				where: { userId: currentUser.id, project: { status: 'ACTIVE' } },
+				select: { projectId: true },
+			});
+			if (!membership) throw new ApiError(422, 'Usuário não é membro de nenhum projeto ativo');
+			return membership.projectId;
+		}
+
+		throw new ApiError(403, 'Perfil não autorizado');
+	}
+
+	private async validateProjectAccess(projectId: string, currentUser: { id: string; role: string }) {
+		const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true, status: true, adminId: true } });
 		if (!project) throw new ApiError(404, 'Projeto não encontrado');
 		if (project.status !== 'ACTIVE') throw new ApiError(422, 'Projeto não está ativo para criação de leads');
 
@@ -27,12 +70,7 @@ class LeadService {
 			if (!membership) throw new ApiError(403, 'Usuário não é membro do projeto');
 		}
 
-		const duplicate = await leadRepository.findDuplicateInProject(project.id, data.email, data.phone);
-		if (duplicate) throw new ApiError(409, 'Lead duplicado no projeto');
-
-		const lead = await leadRepository.create(data);
-		await leadRepository.addHistory(lead.id, null, lead.status, currentUser.id, null);
-		return lead;
+		return project;
 	}
 
 	async getById(id: string, currentUser: { id: string; role: string }) {

@@ -61,7 +61,21 @@ export const listProjectsQuerySchema = z.object({
 	}),
 });
 
+// Schema para criar novo PROJECT_USER e adicionar como membro
+export const createAndAddMemberSchema = z.object({
+	params: z.object({
+		projectId: z.uuid('Formato de UUID inválido para o ID do projeto (projectId)'),
+	}),
+	body: z.object({
+		name: z.string().min(3, 'O nome deve ter no mínimo 3 caracteres'),
+		email: z.string().email({ message: 'Email inválido' }),
+		phone: z.string().optional(),
+		password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres').optional(),
+	}),
+});
+
 export type CreateProjectData = z.infer<typeof createProjectSchema>['body'];
 export type UpdateProjectData = z.infer<typeof updateProjectSchema>['body'];
 export type AddMemberData = z.infer<typeof addMemberSchema>['body'];
+export type CreateAndAddMemberData = z.infer<typeof createAndAddMemberSchema>['body'];
 export type ListProjectsQueryData = z.infer<typeof listProjectsQuerySchema>['query'];

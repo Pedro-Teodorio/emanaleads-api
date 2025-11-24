@@ -15,8 +15,8 @@ export const createLeadSchema = z.object({
 			phone: z.string().optional(),
 			position: z.string().optional(), // cargo
 			requestType: z.string().optional(), // tipo de serviço solicitado
-			projectId: z.uuid('Formato inválido para projectId'),
-			assignedUserId: z.uuid('Formato inválido para assignedUserId').optional(),
+			projectId: z.uuid('Formato inválido para projectId').optional(), // inferido se omitido
+			assignedUserId: z.uuid('Formato inválido para assignedUserId').optional(), // inferido se omitido
 			status: z.enum(LeadStatus).optional(), // opcional, default via modelo
 		})
 		.superRefine((val, ctx) => {

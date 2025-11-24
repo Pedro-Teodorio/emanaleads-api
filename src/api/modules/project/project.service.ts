@@ -138,6 +138,39 @@ class ProjectService {
 		return { admin: project.adminId, members };
 	}
 
+	async createAndAddMember(projectId: string, userData: { name: string; email: string; phone?: string; password?: string }, currentAdminId: string) {
+		const project = await projectRepository.findUnique({ where: { id: projectId } });
+
+		if (!project) {
+			throw new ApiError(404, 'Projeto não encontrado.');
+		}
+
+		if (project.adminId !== currentAdminId) {
+			throw new ApiError(403, 'Acesso negado. Você não é o administrador deste projeto.');
+		}
+
+		const existingUser = await userRepository.findByEmail(userData.email);
+		if (existingUser) {
+			throw new ApiError(400, 'Já existe um usuário com este email.');
+		}
+
+		const newUser = await userRepository.create({
+			name: userData.name,
+			email: userData.email,
+			phone: userData.phone,
+			password: userData.password || '123456',
+			role: SystemRole.PROJECT_USER,
+			status: 'ACTIVE',
+		});
+
+		const member = await projectRepository.addMember({
+			projectId,
+			userId: newUser.id,
+		});
+
+		return member;
+	}
+
 	removeMember = async (projectId: string, memberId: string, currentAdminId: string) => {
 		const project = await projectRepository.findUnique({ where: { id: projectId } });
 
