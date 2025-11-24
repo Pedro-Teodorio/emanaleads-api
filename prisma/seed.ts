@@ -86,7 +86,7 @@ async function main() {
 	const leadsData = [
 		{ name: 'Alice Primeiro Contato', email: 'alice.lead@demo.com', projectId: project.id, position: 'CTO', requestType: 'consultoria', status: 'PRIMEIRO_CONTATO', assignedUserId: user.id },
 		{ name: 'Bruno Reuniao', email: 'bruno.lead@demo.com', projectId: project.id, position: 'COO', requestType: 'implantacao', status: 'REUNIAO', assignedUserId: user.id },
-		{ name: 'Carla Proposta Enviada', email: 'carla.lead@demo.com', projectId: project.id, position: 'CFO', requestType: 'auditoria', status: 'PROPOSTA_ENVIADA', assignedUserId: null },
+		{ name: 'Carla Proposta Enviada', email: 'carla.lead@demo.com', projectId: project.id, position: 'CFO', requestType: 'auditoria', status: 'PROPOSTA_ENVIADA', assignedUserId: admin.id },
 		{ name: 'Davi Analise', email: 'davi.lead@demo.com', projectId: project.id, position: 'Head Marketing', requestType: 'consultoria', status: 'ANALISE_PROPOSTA', assignedUserId: user.id },
 		{ name: 'Eva Ganho', email: 'eva.lead@demo.com', projectId: project.id, position: 'Diretora', requestType: 'outsourcing', status: 'FECHADO_GANHO', assignedUserId: user.id },
 		{ name: 'Fabio Perdido', email: 'fabio.lead@demo.com', projectId: project.id, position: 'Gerente', requestType: 'treinamento', status: 'FECHADO_PERDIDO', assignedUserId: user.id },
