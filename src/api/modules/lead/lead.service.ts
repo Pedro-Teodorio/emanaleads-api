@@ -1,6 +1,6 @@
 import { LeadStatus } from '@prisma/client';
 import { leadRepository } from './lead.repository';
-import { CreateLeadData, UpdateLeadData, UpdateLeadStatusData, ListLeadsQueryData } from './lead.validation';
+import { CreateLeadData, UpdateLeadData, UpdateLeadStatusData, ListLeadsQueryData, ExportLeadsQueryData } from './lead.validation';
 import { prisma } from '../../../config/prisma';
 import { ApiError } from '../../../utils/ApiError';
 
@@ -138,6 +138,27 @@ class LeadService {
 			return;
 		}
 		throw new ApiError(403, 'Perfil não autorizado');
+	}
+
+	/**
+	 * Exporta leads em CSV aplicando mesmos filtros e RBAC do list
+	 * Limite soft de 50.000 registros
+	 */
+	async exportCSV(filters: ExportLeadsQueryData, currentUser: { id: string; role: string }) {
+		// Aplica mesma lógica de RBAC do método list
+		const adjustedFilters = { ...filters } as any;
+		if (currentUser.role === 'PROJECT_USER') {
+			adjustedFilters.assignedUserId = currentUser.id;
+		}
+
+		const leads = await leadRepository.listForExport(adjustedFilters);
+
+		// Valida limite soft de 50.000 registros
+		if (leads.length > 50000) {
+			throw new ApiError(400, 'Exportação limitada a 50.000 registros. Aplique filtros mais específicos para reduzir o volume.');
+		}
+
+		return leads;
 	}
 }
 

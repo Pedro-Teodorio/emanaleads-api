@@ -168,6 +168,41 @@ export class LeadRepository {
 		};
 	}
 
+	/**
+	 * Lista leads para exportação CSV sem paginação
+	 * Inclui relações project e assignedUser para nomes
+	 * Limite de 50.001 registros para validação soft
+	 */
+	async listForExport(filters: Omit<ListLeadsQueryData, 'page' | 'limit'>) {
+		const where = this.buildWhere(filters as ListLeadsQueryData);
+		const orderBy = this.getOrderBy(filters as ListLeadsQueryData);
+
+		const leads = await prisma.lead.findMany({
+			where,
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				phone: true,
+				position: true,
+				requestType: true,
+				status: true,
+				createdAt: true,
+				updatedAt: true,
+				project: {
+					select: { name: true },
+				},
+				assignedUser: {
+					select: { name: true },
+				},
+			},
+			orderBy,
+			take: 50001, // Limite soft: busca 50.001 para validar se excedeu 50k
+		});
+
+		return leads;
+	}
+
 	update(id: string, data: UpdateLeadData) {
 		return prisma.lead.update({
 			where: { id },

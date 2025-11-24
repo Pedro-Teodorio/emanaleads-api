@@ -118,8 +118,14 @@ export const leadIdParamSchema = z.object({
 // Poderemos futuramente expor histórico dedicado
 export const leadHistoryParamsSchema = leadIdParamSchema;
 
+// Schema de exportação: reutiliza filtros de listagem mas sem paginação
+export const exportLeadsSchema = z.object({
+	query: listLeadsQuerySchema.shape.query.omit({ page: true, limit: true }),
+});
+
 export type CreateLeadData = z.infer<typeof createLeadSchema>['body'];
 export type UpdateLeadData = z.infer<typeof updateLeadSchema>['body'];
 export type UpdateLeadStatusData = z.infer<typeof updateLeadStatusSchema>['body'];
 export type ListLeadsQueryData = z.infer<typeof listLeadsQuerySchema>['query'];
+export type ExportLeadsQueryData = z.infer<typeof exportLeadsSchema>['query'];
 export type LeadIdParams = z.infer<typeof leadIdParamSchema>['params'];
