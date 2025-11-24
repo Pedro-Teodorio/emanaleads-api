@@ -15,9 +15,16 @@ class UserService {
 			throw new ApiError(400, 'Email já cadastrado');
 		}
 
-		const hashedPassword = await bcrypt.hash(data.password || '', SALT_ROUNDS);
+		// Se password fornecida, fazer hash e status ACTIVE. Caso contrário, manter sem senha e status INACTIVE para exigir ativação.
+		const hashedPassword = data.password ? await bcrypt.hash(data.password, SALT_ROUNDS) : null;
 
-		const user = await userRepository.create(data, hashedPassword);
+		const user = await userRepository.create(
+			{
+				...data,
+				status: data.password ? 'ACTIVE' : 'INACTIVE',
+			},
+			hashedPassword,
+		);
 
 		return user;
 	}
@@ -95,6 +102,22 @@ class UserService {
 		await userRepository.delete(userId);
 
 		return { message: 'Usuário deletado com sucesso.' };
+	}
+
+	async resetPasswordAsAdmin(userId: string, newPassword: string) {
+		const targetUser = await userRepository.findById(userId);
+
+		if (!targetUser) {
+			throw new ApiError(404, 'Usuário não encontrado');
+		}
+
+		// Hash da nova senha
+		const hashedNewPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+		// Atualizar senha
+		await userRepository.updatePassword(userId, hashedNewPassword);
+
+		return { message: 'Senha resetada com sucesso' };
 	}
 }
 

@@ -89,7 +89,7 @@ async function main() {
 		{ name: 'Carla Proposta Enviada', email: 'carla.lead@demo.com', projectId: project.id, position: 'CFO', requestType: 'auditoria', status: 'PROPOSTA_ENVIADA', assignedUserId: null },
 		{ name: 'Davi Analise', email: 'davi.lead@demo.com', projectId: project.id, position: 'Head Marketing', requestType: 'consultoria', status: 'ANALISE_PROPOSTA', assignedUserId: user.id },
 		{ name: 'Eva Ganho', email: 'eva.lead@demo.com', projectId: project.id, position: 'Diretora', requestType: 'outsourcing', status: 'FECHADO_GANHO', assignedUserId: user.id },
-		{ name: 'Fabio Perdido', email: 'fabio.lead@demo.com', projectId: project.id, position: 'Gerente', requestType: 'treinamento', status: 'FECHADO_PERDIDO', assignedUserId: null },
+		{ name: 'Fabio Perdido', email: 'fabio.lead@demo.com', projectId: project.id, position: 'Gerente', requestType: 'treinamento', status: 'FECHADO_PERDIDO', assignedUserId: user.id },
 	];
 
 	for (const ld of leadsData) {

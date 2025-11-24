@@ -37,20 +37,26 @@ enum LeadStatus {
   FECHADO_PERDIDO
 }
 
+enum TokenType {
+  PASSWORD_RESET
+  ACCOUNT_ACTIVATION
+}
+
 model User {
-  id               String          @id @default(uuid())
-  email            String          @unique
-  phone            String?
-  name             String
-  password         String?
-  role             SystemRole // O papel DESTE usuário no sistema
-  status           Status          @default(ACTIVE)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  adminOfProjects  Project[]       @relation("AdminOfProjects")
-  memberOfProjects ProjectMember[]
-  assignedLeads    Lead[]          @relation("AssignedUserLeads")
-  leadStatusChanges LeadHistory[]  @relation("LeadStatusChangesByUser")
+  id                String          @id @default(uuid())
+  email             String          @unique
+  phone             String?
+  name              String
+  password          String?
+  role              SystemRole // O papel DESTE usuário no sistema
+  status            Status          @default(ACTIVE)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  adminOfProjects   Project[]       @relation("AdminOfProjects")
+  memberOfProjects  ProjectMember[]
+  assignedLeads     Lead[]          @relation("AssignedUserLeads")
+  leadStatusChanges LeadHistory[]   @relation("LeadStatusChangesByUser")
+  tokens            Token[]
 
   @@index([status, role])
 }
@@ -62,11 +68,11 @@ model Project {
   status      ProjectStatus @default(PLANNING)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  adminId String 
-  admin   User   @relation("AdminOfProjects", fields: [adminId], references: [id])
+  adminId     String
+  admin       User          @relation("AdminOfProjects", fields: [adminId], references: [id])
 
-  members ProjectMember[]
-  leads   Lead[]
+  members   ProjectMember[]
+  leads     Lead[]
   campaigns Campaign[]
 
   @@index([adminId])
@@ -85,20 +91,20 @@ model ProjectMember {
 }
 
 model Lead {
-  id             String      @id @default(uuid())
+  id             String        @id @default(uuid())
   name           String
-  email          String?     // contato opcional
-  phone          String?     // contato opcional
-  position       String?     // cargo do lead
-  requestType    String?     // tipo de serviço solicitado (solicitacao)
-  status         LeadStatus  @default(PRIMEIRO_CONTATO)
+  email          String? // contato opcional
+  phone          String? // contato opcional
+  position       String? // cargo do lead
+  requestType    String? // tipo de serviço solicitado (solicitacao)
+  status         LeadStatus    @default(PRIMEIRO_CONTATO)
   projectId      String
-  project        Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   assignedUserId String?
-  assignedUser   User?       @relation("AssignedUserLeads", fields: [assignedUserId], references: [id])
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  deletedAt      DateTime?   // soft delete
+  assignedUser   User?         @relation("AssignedUserLeads", fields: [assignedUserId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime? // soft delete
   history        LeadHistory[]
 
   @@index([status, projectId])
@@ -115,7 +121,7 @@ model LeadHistory {
   toStatus        LeadStatus
   changedByUserId String?
   changedBy       User?       @relation("LeadStatusChangesByUser", fields: [changedByUserId], references: [id])
-  reason          String?     // motivo da mudança (perda/ganho etc)
+  reason          String? // motivo da mudança (perda/ganho etc)
   createdAt       DateTime    @default(now())
 
   @@index([leadId])
@@ -123,27 +129,42 @@ model LeadHistory {
 }
 
 model Campaign {
-  id                 String   @id @default(uuid())
-  projectId          String
-  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  name               String
+  id                  String   @id @default(uuid())
+  projectId           String
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name                String
   // Representação de período: mês/ano de pagamento e da campanha
-  monthPayment       Int      // 1..12
-  yearPayment        Int
-  monthCampaign      Int      // 1..12
-  yearCampaign       Int
+  monthPayment        Int // 1..12
+  yearPayment         Int
+  monthCampaign       Int // 1..12
+  yearCampaign        Int
   // Métricas base (valores de entrada)
-  clicks             Int      @default(0)
-  conversions        Int      @default(0)
-  qualified          Int      @default(0)
-  sales              Int      @default(0)
+  clicks              Int      @default(0)
+  conversions         Int      @default(0)
+  qualified           Int      @default(0)
+  sales               Int      @default(0)
   investmentGoogleAds Decimal  @default(0)
   investmentTotal     Decimal  @default(0)
-  approvalsRate      Float?
-  goalQualifiedConv  Float?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  approvalsRate       Float?
+  goalQualifiedConv   Float?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@index([projectId])
   @@index([yearCampaign, monthCampaign])
+}
+
+model Token {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  type      TokenType
+  expiresAt DateTime
+  used      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  @@index([token, type])
+  @@index([userId])
+  @@index([expiresAt])
 }

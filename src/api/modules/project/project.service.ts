@@ -3,6 +3,9 @@ import { ApiError } from '../../../utils/ApiError';
 import { AddMemberData, CreateProjectData, UpdateProjectData } from './project.validation';
 import { projectRepository } from './project.repository';
 import { userRepository } from '../user/user.repository';
+import { tokenService } from '../../../utils/token.service';
+import { emailService } from '../../../utils/email.service';
+import { logger } from '../../../utils/logger';
 
 class ProjectService {
 	async create(data: CreateProjectData) {
@@ -154,11 +157,12 @@ class ProjectService {
 			throw new ApiError(400, 'Já existe um usuário com este email.');
 		}
 
+		// Se senha não fornecida, criar usuário com password null (requer ativação posterior)
 		const newUser = await userRepository.create({
 			name: userData.name,
 			email: userData.email,
 			phone: userData.phone,
-			password: userData.password || '123456',
+			password: userData.password ?? undefined,
 			role: SystemRole.PROJECT_USER,
 			status: 'ACTIVE',
 		});
@@ -167,6 +171,22 @@ class ProjectService {
 			projectId,
 			userId: newUser.id,
 		});
+
+		// Se senha não foi fornecida, enviar email de ativação
+		if (userData.password) {
+			try {
+				await emailService.sendWelcomeEmail(newUser.email, newUser.name);
+			} catch (error) {
+				logger.error({ err: error, email: newUser.email }, 'Erro ao enviar email de boas-vindas');
+			}
+		} else {
+			try {
+				const activationToken = await tokenService.createActivationToken(newUser.id);
+				await emailService.sendActivationEmail(newUser.email, activationToken, newUser.name);
+			} catch (error) {
+				logger.error({ err: error, email: newUser.email }, 'Erro ao enviar email de ativação');
+			}
+		}
 
 		return member;
 	}

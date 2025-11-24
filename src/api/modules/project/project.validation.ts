@@ -61,6 +61,9 @@ export const listProjectsQuerySchema = z.object({
 	}),
 });
 
+// Política de senha: mínimo 8 caracteres, ao menos 1 maiúscula, 1 minúscula, 1 dígito e 1 especial
+const passwordPolicyRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
 // Schema para criar novo PROJECT_USER e adicionar como membro
 export const createAndAddMemberSchema = z.object({
 	params: z.object({
@@ -68,9 +71,9 @@ export const createAndAddMemberSchema = z.object({
 	}),
 	body: z.object({
 		name: z.string().min(3, 'O nome deve ter no mínimo 3 caracteres'),
-		email: z.string().email({ message: 'Email inválido' }),
+		email: z.string().email(),
 		phone: z.string().optional(),
-		password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres').optional(),
+		password: z.string().regex(passwordPolicyRegex, 'Senha deve ter mínimo 8 caracteres e incluir maiúscula, minúscula, número e caractere especial').optional(),
 	}),
 });
 

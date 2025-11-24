@@ -5,6 +5,7 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { projectRoutes } from './modules/project/project.routes';
 import { leadRoutes } from './modules/lead/lead.routes';
 import { campaignRoutes } from './modules/campaign/campaign.routes';
+import { emailService } from '../utils/email.service';
 
 const router = Router();
 
@@ -18,6 +19,11 @@ router.get('/health', (req, res) => {
 		pid: process.pid,
 		host: os.hostname(),
 	});
+});
+
+// Health específico de email
+router.get('/health/email', (req, res) => {
+	res.json({ configured: emailService.isConfigured() });
 });
 
 router.use('/users', userRoutes);
