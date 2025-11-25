@@ -3,7 +3,7 @@ node_modules
 .env
 
 # Build output
-dist
+dist/
 
 /src/generated/prisma
 .gemini
