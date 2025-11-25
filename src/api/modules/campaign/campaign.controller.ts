@@ -59,7 +59,7 @@ class CampaignController {
 	getMetrics = async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const { projectId } = req.params as { projectId: string };
-			const filters = req.query as { year?: string; month?: string };
+			const filters = req.query as { year?: number; month?: number };
 			const metrics = await campaignService.getMetrics(projectId, filters, req.user!);
 			res.json(metrics);
 		} catch (err) {
@@ -73,7 +73,7 @@ class CampaignController {
 	getMonthlyMetrics = async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const { projectId } = req.params as { projectId: string };
-			const year = req.query.year ? Number(req.query.year) : undefined;
+			const year = req.query.year as number | undefined;
 			const metrics = await campaignService.getMonthlyMetrics(projectId, year, req.user!);
 			res.json(metrics);
 		} catch (err) {

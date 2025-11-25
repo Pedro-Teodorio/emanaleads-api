@@ -72,8 +72,8 @@ export class CampaignRepository {
 	async getMetrics(projectId: string, filters?: MetricsQueryData) {
 		const where: Prisma.CampaignWhereInput = { projectId };
 
-		if (filters?.year) where.yearCampaign = Number(filters.year);
-		if (filters?.month) where.monthCampaign = Number(filters.month);
+		if (filters?.year) where.yearCampaign = filters.year;
+		if (filters?.month) where.monthCampaign = filters.month;
 
 		const aggregation = await prisma.campaign.aggregate({
 			where,

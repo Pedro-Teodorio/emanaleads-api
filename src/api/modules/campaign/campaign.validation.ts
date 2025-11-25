@@ -70,15 +70,15 @@ export const listCampaignsQuerySchema = z.object({
 export const metricsQuerySchema = z.object({
 	params: z.object({ projectId: z.uuid() }),
 	query: z.object({
-		year: z.string().regex(/^\d+$/).optional(),
-		month: z.string().regex(/^\d+$/).optional(),
+		year: z.coerce.number().int().min(2000).max(2100).optional(),
+		month: z.coerce.number().int().min(1).max(12).optional(),
 	}),
 });
 
 export const monthlyMetricsQuerySchema = z.object({
 	params: z.object({ projectId: z.uuid() }),
 	query: z.object({
-		year: z.string().regex(/^\d+$/).optional(),
+		year: z.coerce.number().int().min(2000).max(2100).optional(),
 	}),
 });
 
