@@ -307,6 +307,128 @@ Pelo menos um contato (`email` ou `phone`) deve ser informado.
 -   PROJECT_USER só visualiza/atua sobre leads atribuídos a ele.
 -   Histórico criado em toda mudança inicial de criação e transição de status.
 
+## Módulo Campanhas 📊
+
+O módulo de Campanhas fornece gerenciamento de campanhas de marketing vinculadas a projetos, incluindo métricas de performance agregadas e análise de tendências.
+
+### Modelo
+
+-   **Campaign**: Representa uma campanha de marketing com métricas como cliques, conversões, leads qualificados, vendas e investimentos.
+-   Campos de período: `monthPayment`, `yearPayment`, `monthCampaign`, `yearCampaign` para rastrear pagamento e período da campanha.
+-   Métricas base: `clicks`, `conversions`, `qualified`, `sales`, `investmentGoogleAds`, `investmentTotal`.
+-   Taxas configuráveis: `approvalsRate`, `goalQualifiedConv`.
+
+### RBAC & Ownership
+
+-   ROOT: acesso total a todas as campanhas.
+-   ADMIN: apenas campanhas de projetos onde ele é `adminId`.
+
+### Endpoints
+
+| Método | Rota                                            | Descrição                                      | Perfis     |
+| ------ | ----------------------------------------------- | ---------------------------------------------- | ---------- |
+| POST   | `/api/projects/:projectId/campaigns`            | Criar campanha                                 | ROOT, ADMIN |
+| GET    | `/api/projects/:projectId/campaigns`            | Listar campanhas (com filtros/paginação)       | ROOT, ADMIN |
+| GET    | `/api/projects/:projectId/campaigns/:campaignId`| Obter campanha por ID                          | ROOT, ADMIN |
+| PUT    | `/api/projects/:projectId/campaigns/:campaignId`| Atualizar campanha                             | ROOT, ADMIN |
+| DELETE | `/api/projects/:projectId/campaigns/:campaignId`| Deletar campanha                               | ROOT, ADMIN |
+| GET    | `/api/projects/:projectId/campaigns/metrics`    | Obter métricas agregadas do projeto            | ROOT, ADMIN |
+| GET    | `/api/projects/:projectId/campaigns/metrics/monthly` | Obter métricas mensais para análise de tendência | ROOT, ADMIN |
+
+### Endpoint de Métricas Agregadas
+
+`GET /api/projects/:projectId/campaigns/metrics`
+
+Retorna um resumo agregado de todas as campanhas do projeto:
+
+```json
+{
+  "totalCampaigns": 5,
+  "totals": {
+    "clicks": 10000,
+    "conversions": 500,
+    "qualified": 250,
+    "sales": 50,
+    "investmentGoogleAds": 5000.00,
+    "investmentTotal": 7500.00
+  },
+  "averages": {
+    "approvalsRate": 75.5,
+    "goalQualifiedConv": 50.0
+  },
+  "calculated": {
+    "ctr": 5.00,
+    "qualificationRate": 50.00,
+    "salesConversionRate": 20.00,
+    "cpa": 15.00,
+    "cpq": 30.00,
+    "cps": 150.00,
+    "googleAdsPercentage": 66.67
+  }
+}
+```
+
+#### KPIs Calculados
+
+| Métrica               | Descrição                                           |
+| --------------------- | --------------------------------------------------- |
+| `ctr`                 | Taxa de conversão por clique (%)                    |
+| `qualificationRate`   | Taxa de qualificação por conversão (%)              |
+| `salesConversionRate` | Taxa de vendas por lead qualificado (%)             |
+| `cpa`                 | Custo por Aquisição (investimento/conversões)       |
+| `cpq`                 | Custo por Lead Qualificado                          |
+| `cps`                 | Custo por Venda                                     |
+| `googleAdsPercentage` | Percentual do investimento em Google Ads (%)        |
+
+### Endpoint de Métricas Mensais
+
+`GET /api/projects/:projectId/campaigns/metrics/monthly?year=2025`
+
+Retorna métricas agrupadas por mês para análise de tendências:
+
+```json
+[
+  {
+    "period": "2025-01",
+    "year": 2025,
+    "month": 1,
+    "campaignCount": 2,
+    "totals": {
+      "clicks": 5000,
+      "conversions": 250,
+      "qualified": 125,
+      "sales": 25,
+      "investmentGoogleAds": 2500.00,
+      "investmentTotal": 3750.00
+    },
+    "calculated": {
+      "ctr": 5.00,
+      "qualificationRate": 50.00,
+      "salesConversionRate": 20.00,
+      "cpa": 15.00
+    }
+  }
+]
+```
+
+### Query Params para Filtros
+
+| Param   | Tipo   | Exemplo | Observação                          |
+| ------- | ------ | ------- | ----------------------------------- |
+| `page`  | number | `1`     | Default 1 (apenas para listagem)    |
+| `limit` | number | `10`    | Default 10 (apenas para listagem)   |
+| `search`| string | `jan`   | Busca por nome da campanha          |
+| `year`  | number | `2025`  | Filtrar por ano da campanha         |
+| `month` | number | `1`     | Filtrar por mês da campanha         |
+
+### Erros Comuns
+
+| Status | Motivo                                   |
+| ------ | ---------------------------------------- |
+| 401    | Sem autenticação                         |
+| 403    | Acesso negado (ownership / RBAC)         |
+| 404    | Campanha ou Projeto não encontrado       |
+
 ## Contribuição 🤝
 
 1. Faça um fork do projeto.

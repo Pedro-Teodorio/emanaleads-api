@@ -67,6 +67,22 @@ export const listCampaignsQuerySchema = z.object({
 	}),
 });
 
+export const metricsQuerySchema = z.object({
+	params: z.object({ projectId: z.uuid() }),
+	query: z.object({
+		year: z.string().regex(/^\d+$/).optional(),
+		month: z.string().regex(/^\d+$/).optional(),
+	}),
+});
+
+export const monthlyMetricsQuerySchema = z.object({
+	params: z.object({ projectId: z.uuid() }),
+	query: z.object({
+		year: z.string().regex(/^\d+$/).optional(),
+	}),
+});
+
 export type CreateCampaignData = z.infer<typeof createCampaignSchema>['body'] & { projectId: string };
 export type UpdateCampaignData = z.infer<typeof updateCampaignSchema>['body'];
 export type ListCampaignsQueryData = z.infer<typeof listCampaignsQuerySchema>['query'] & { projectId: string };
+export type MetricsQueryData = z.infer<typeof metricsQuerySchema>['query'];

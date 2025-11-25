@@ -51,6 +51,35 @@ class CampaignController {
 			next(err);
 		}
 	};
+
+	/**
+	 * Get aggregated metrics summary for a project's campaigns
+	 * Includes: totals, averages, and calculated KPIs (CTR, CPA, CPQ, CPS)
+	 */
+	getMetrics = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const { projectId } = req.params as { projectId: string };
+			const filters = req.query as { year?: string; month?: string };
+			const metrics = await campaignService.getMetrics(projectId, filters, req.user!);
+			res.json(metrics);
+		} catch (err) {
+			next(err);
+		}
+	};
+
+	/**
+	 * Get monthly breakdown of metrics for trend analysis
+	 */
+	getMonthlyMetrics = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const { projectId } = req.params as { projectId: string };
+			const year = req.query.year ? Number(req.query.year) : undefined;
+			const metrics = await campaignService.getMonthlyMetrics(projectId, year, req.user!);
+			res.json(metrics);
+		} catch (err) {
+			next(err);
+		}
+	};
 }
 
 export const campaignController = new CampaignController();

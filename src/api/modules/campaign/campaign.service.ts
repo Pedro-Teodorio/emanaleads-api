@@ -1,6 +1,6 @@
 import { ApiError } from '../../../utils/ApiError';
 import { campaignRepository } from './campaign.repository';
-import { ListCampaignsQueryData, CreateCampaignData, UpdateCampaignData } from './campaign.validation';
+import { ListCampaignsQueryData, CreateCampaignData, UpdateCampaignData, MetricsQueryData } from './campaign.validation';
 import { prisma } from '../../../config/prisma';
 
 class CampaignService {
@@ -43,6 +43,22 @@ class CampaignService {
 	async list(filters: ListCampaignsQueryData, currentUser: { id: string; role: string }) {
 		if (currentUser.role !== 'ROOT') await this.assertProjectOwnership(filters.projectId, currentUser);
 		return campaignRepository.list(filters);
+	}
+
+	/**
+	 * Get aggregated metrics summary for a project's campaigns
+	 */
+	async getMetrics(projectId: string, filters: MetricsQueryData, currentUser: { id: string; role: string }) {
+		if (currentUser.role !== 'ROOT') await this.assertProjectOwnership(projectId, currentUser);
+		return campaignRepository.getMetrics(projectId, filters);
+	}
+
+	/**
+	 * Get monthly breakdown of metrics for trend analysis
+	 */
+	async getMonthlyMetrics(projectId: string, year: number | undefined, currentUser: { id: string; role: string }) {
+		if (currentUser.role !== 'ROOT') await this.assertProjectOwnership(projectId, currentUser);
+		return campaignRepository.getMonthlyMetrics(projectId, year);
 	}
 }
 
