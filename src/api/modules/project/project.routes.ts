@@ -38,6 +38,12 @@ router.get(
 	projectController.listRecentProjects, // 4. Executa
 );
 
+// Rota para buscar um projeto específico (ROOT/ADMIN)
+router.get('/:projectId', authMiddleware, validateRole(['ROOT', 'ADMIN']), projectController.getById);
+
+// Rota para buscar métricas de um projeto (ROOT/ADMIN)
+router.get('/:projectId/metrics', authMiddleware, validateRole(['ROOT', 'ADMIN']), projectController.getMetrics);
+
 // Rota para atualizar um projeto (Somente ROOT)
 router.put(
 	'/:projectId',

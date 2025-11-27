@@ -215,6 +215,58 @@ class ProjectService {
 
 		return { message: 'Membro removido do projeto com sucesso.' };
 	};
+
+	async getById(projectId: string, user: { id: string; role: SystemRole }) {
+		const project = await projectRepository.findUnique({
+			where: { id: projectId },
+			include: {
+				admin: {
+					select: { id: true, name: true, email: true, role: true },
+				},
+			},
+		});
+
+		if (!project) {
+			throw new ApiError(404, 'Projeto não encontrado.');
+		}
+
+		// ROOT pode ver qualquer projeto, ADMIN só o próprio
+		if (user.role !== SystemRole.ROOT && project.adminId !== user.id) {
+			throw new ApiError(403, 'Acesso negado.');
+		}
+
+		return project;
+	}
+
+	async getMetrics(projectId: string, user: { id: string; role: SystemRole }) {
+		const project = await projectRepository.findUnique({ where: { id: projectId } });
+
+		if (!project) {
+			throw new ApiError(404, 'Projeto não encontrado.');
+		}
+
+		// ROOT pode ver qualquer projeto, ADMIN só o próprio
+		if (user.role !== SystemRole.ROOT && project.adminId !== user.id) {
+			throw new ApiError(403, 'Acesso negado.');
+		}
+
+		// Buscar métricas do projeto
+		const [totalMembers, totalCampaigns, totalLeads, leadsStatusDistribution, campaignsData] = await Promise.all([
+			projectRepository.countMembers(projectId),
+			projectRepository.countCampaigns(projectId),
+			projectRepository.countLeads(projectId),
+			projectRepository.getLeadsStatusDistribution(projectId),
+			projectRepository.getCampaignsOverview(projectId),
+		]);
+
+		return {
+			totalMembers,
+			totalCampaigns,
+			totalLeads,
+			leadsStatusDistribution,
+			campaignsOverview: campaignsData,
+		};
+	}
 }
 
 export const projectService = new ProjectService();

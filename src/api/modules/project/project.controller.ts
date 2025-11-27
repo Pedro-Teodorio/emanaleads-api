@@ -44,6 +44,32 @@ class ProjectController {
 	}
 
 	/**
+	 * [ROOT/ADMIN] Busca um projeto específico
+	 */
+	async getById(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { projectId } = req.params;
+			const project = await projectService.getById(projectId, req.user!);
+			res.status(200).json(project);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
+	 * [ROOT/ADMIN] Busca métricas de um projeto
+	 */
+	async getMetrics(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { projectId } = req.params;
+			const metrics = await projectService.getMetrics(projectId, req.user!);
+			res.status(200).json(metrics);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
 	 * [ADMIN] Lista projetos administrados pelo usuário atual
 	 */
 	async listProjectsAsAdmin(req: Request, res: Response, next: NextFunction) {

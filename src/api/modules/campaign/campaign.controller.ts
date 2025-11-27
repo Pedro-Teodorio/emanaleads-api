@@ -51,6 +51,16 @@ class CampaignController {
 			next(err);
 		}
 	};
+
+	getMetrics = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const { projectId } = req.params as { projectId: string };
+			const metrics = await campaignService.getMetrics(projectId, req.user!);
+			res.json(metrics);
+		} catch (err) {
+			next(err);
+		}
+	};
 }
 
 export const campaignController = new CampaignController();
