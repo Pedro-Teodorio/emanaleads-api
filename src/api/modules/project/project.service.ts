@@ -6,6 +6,9 @@ import { userRepository } from '../user/user.repository';
 import { tokenService } from '../../../utils/token.service';
 import { emailService } from '../../../utils/email.service';
 import { logger } from '../../../utils/logger';
+import bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 10;
 
 class ProjectService {
 	async create(data: CreateProjectData) {
@@ -158,14 +161,18 @@ class ProjectService {
 		}
 
 		// Se senha não fornecida, criar usuário com password null (requer ativação posterior)
-		const newUser = await userRepository.create({
-			name: userData.name,
-			email: userData.email,
-			phone: userData.phone,
-			password: userData.password ?? undefined,
-			role: SystemRole.PROJECT_USER,
-			status: 'ACTIVE',
-		});
+		const hashedPassword = userData.password ? await bcrypt.hash(userData.password, SALT_ROUNDS) : null;
+
+		const newUser = await userRepository.create(
+			{
+				name: userData.name,
+				email: userData.email,
+				phone: userData.phone,
+				role: SystemRole.PROJECT_USER,
+				status: 'ACTIVE',
+			},
+			hashedPassword,
+		);
 
 		const member = await projectRepository.addMember({
 			projectId,

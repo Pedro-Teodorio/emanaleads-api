@@ -7,6 +7,4 @@ node_modules
 
 # Build artifacts
 dist/
-
-# Package lock files (using pnpm)
 package-lock.json
