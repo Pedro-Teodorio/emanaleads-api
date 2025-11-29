@@ -22,3 +22,4 @@ app.use('/api', apiRoutes);
 app.use(errorHandler);
 
 export { app };
+export default app;
