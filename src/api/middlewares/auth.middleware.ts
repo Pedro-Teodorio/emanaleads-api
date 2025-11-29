@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { SystemRole } from '@prisma/client';
 import { env } from '../../config/env';
 import { ApiError } from '../../utils/ApiError';
 
 declare global {
 	namespace Express {
 		interface Request {
-			user?: { id: string; email: string; role: string };
+			user?: { id: string; email: string; role: SystemRole };
 		}
 	}
 }
@@ -23,7 +24,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 			return next(new ApiError(401, 'Token inválido'));
 		}
 
-		req.user = decoded as { id: string; email: string; role: string };
+		req.user = decoded as { id: string; email: string; role: SystemRole };
 		return next();
 	});
 };
