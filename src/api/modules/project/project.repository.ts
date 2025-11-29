@@ -129,7 +129,7 @@ class ProjectRepository {
 			_count: { status: true },
 		});
 
-		return distribution.map((item) => ({
+		return distribution.map((item: { status: any; _count: { status: number } }) => ({
 			status: item.status,
 			count: item._count.status,
 		}));
@@ -146,10 +146,10 @@ class ProjectRepository {
 			},
 		});
 
-		const totalClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0);
-		const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0);
-		const totalSales = campaigns.reduce((sum, c) => sum + c.sales, 0);
-		const totalInvestment = campaigns.reduce((sum, c) => sum + Number(c.investmentTotal), 0);
+		const totalClicks = campaigns.reduce<number>((sum, c) => sum + c.clicks, 0);
+		const totalConversions = campaigns.reduce<number>((sum, c) => sum + c.conversions, 0);
+		const totalSales = campaigns.reduce<number>((sum, c) => sum + c.sales, 0);
+		const totalInvestment = campaigns.reduce<number>((sum, c) => sum + Number(c.investmentTotal), 0);
 
 		return {
 			totalClicks,

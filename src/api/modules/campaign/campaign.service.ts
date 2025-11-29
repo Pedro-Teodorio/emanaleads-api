@@ -48,7 +48,18 @@ class CampaignService {
 	async getMetrics(projectId: string, currentUser: { id: string; role: string }) {
 		await this.assertProjectOwnership(projectId, currentUser);
 
-		const campaigns = await prisma.campaign.findMany({
+		type CampaignMetrics = {
+			clicks: number;
+			conversions: number;
+			qualified: number;
+			sales: number;
+			investmentTotal: any; // Prisma.Decimal, usar any aqui evita necessidade de importar Prisma só para typing
+			approvalsRate: number | null;
+			monthCampaign: number;
+			yearCampaign: number;
+		};
+
+		const campaigns: CampaignMetrics[] = await prisma.campaign.findMany({
 			where: { projectId },
 			select: {
 				clicks: true,
@@ -64,15 +75,15 @@ class CampaignService {
 		});
 
 		const totalCampaigns = campaigns.length;
-		const totalClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0);
-		const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0);
-		const totalQualified = campaigns.reduce((sum, c) => sum + c.qualified, 0);
-		const totalSales = campaigns.reduce((sum, c) => sum + c.sales, 0);
-		const totalInvestment = campaigns.reduce((sum, c) => sum + Number(c.investmentTotal), 0);
+		const totalClicks = campaigns.reduce<number>((sum, c) => sum + c.clicks, 0);
+		const totalConversions = campaigns.reduce<number>((sum, c) => sum + c.conversions, 0);
+		const totalQualified = campaigns.reduce<number>((sum, c) => sum + c.qualified, 0);
+		const totalSales = campaigns.reduce<number>((sum, c) => sum + c.sales, 0);
+		const totalInvestment = campaigns.reduce<number>((sum, c) => sum + Number(c.investmentTotal), 0);
 
 		const averageConversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
 		const validApprovalRates = campaigns.filter((c) => c.approvalsRate !== null).map((c) => c.approvalsRate!);
-		const averageApprovalRate = validApprovalRates.length > 0 ? validApprovalRates.reduce((sum, rate) => sum + rate, 0) / validApprovalRates.length : 0;
+		const averageApprovalRate = validApprovalRates.length > 0 ? validApprovalRates.reduce<number>((sum, rate) => sum + rate, 0) / validApprovalRates.length : 0;
 
 		// Séries temporais (últimos 12 meses ou todos se menos)
 		const monthlySeries = campaigns.slice(-12).map((c) => ({

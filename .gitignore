@@ -8,3 +8,5 @@ node_modules
 # Build artifacts
 dist/
 package-lock.json
+.vercel
+.env*.local
