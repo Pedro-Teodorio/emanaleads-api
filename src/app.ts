@@ -5,11 +5,14 @@ import { apiRoutes } from './api/routes';
 import { errorHandler } from './api/middlewares/errorHandler';
 import { requestLogger } from './api/middlewares/requestLogger.middleware';
 import { metricsMiddleware } from './api/middlewares/metrics.middleware';
+import { env } from './config/env';
 
 const app = express();
 
+const allowedOrigins = [env.FRONTEND_URL || 'https://emanaleads-app.vercel.app', 'http://localhost:3000'];
+
 const corsOptions = {
-	origin: ['https://emanaleads-app.vercel.app', 'http://localhost:3000'],
+	origin: allowedOrigins,
 	credentials: true,
 };
 
