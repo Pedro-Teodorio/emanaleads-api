@@ -4,3 +4,9 @@ node_modules
 
 /src/generated/prisma
 .gemini
+
+# Build artifacts
+dist/
+
+# Package lock files (using pnpm)
+package-lock.json
