@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { projectController } from './project.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema, listProjectsQuerySchema, deleteProjectParamsSchema } from './project.validation';
+import { createProjectSchema, addMemberSchema, listProjectUsersSchema, removeMemberSchema, updateProjectSchema, listProjectsQuerySchema, deleteProjectParamsSchema, createAndAddMemberSchema } from './project.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware';
 
@@ -27,6 +27,9 @@ router.get(
 	projectController.listProjectsAsRoot, // 4. Executa
 );
 
+// Rota para listar projetos do ADMIN atual (Somente ADMIN)
+router.get('/mine', authMiddleware, validateRole(['ADMIN']), projectController.listProjectsAsAdmin);
+
 // Rota para listar os 5 projetos mais recentes (Somente ROOT)
 router.get(
 	'/recent',
@@ -34,6 +37,12 @@ router.get(
 	validateRole(['ROOT']), // 2. É ROOT?
 	projectController.listRecentProjects, // 4. Executa
 );
+
+// Rota para buscar um projeto específico (ROOT/ADMIN)
+router.get('/:projectId', authMiddleware, validateRole(['ROOT', 'ADMIN']), projectController.getById);
+
+// Rota para buscar métricas de um projeto (ROOT/ADMIN)
+router.get('/:projectId/metrics', authMiddleware, validateRole(['ROOT', 'ADMIN']), projectController.getMetrics);
 
 // Rota para atualizar um projeto (Somente ROOT)
 router.put(
@@ -63,6 +72,9 @@ router.post(
 	validateRequest(addMemberSchema), // 3. O body (userId) e params (projectId) são válidos?
 	projectController.addMember, // 4. Executa
 );
+
+// Rota para criar novo PROJECT_USER e adicionar como membro (Somente ADMIN)
+router.post('/:projectId/members/new', authMiddleware, validateRole(['ADMIN']), validateRequest(createAndAddMemberSchema), projectController.createAndAddMember);
 
 // Rota GET /projects/:projectId/users (Listar usuários do projeto)
 // Regra: ADMIN daquele projeto vê Admins e Membros

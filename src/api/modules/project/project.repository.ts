@@ -103,6 +103,61 @@ class ProjectRepository {
 			},
 		});
 	}
+
+	async countMembers(projectId: string) {
+		return prisma.projectMember.count({
+			where: { projectId },
+		});
+	}
+
+	async countCampaigns(projectId: string) {
+		return prisma.campaign.count({
+			where: { projectId },
+		});
+	}
+
+	async countLeads(projectId: string) {
+		return prisma.lead.count({
+			where: { projectId, deletedAt: null },
+		});
+	}
+
+	async getLeadsStatusDistribution(projectId: string) {
+		const distribution = await prisma.lead.groupBy({
+			by: ['status'],
+			where: { projectId, deletedAt: null },
+			_count: { status: true },
+		});
+
+		return distribution.map((item) => ({
+			status: item.status,
+			count: item._count.status,
+		}));
+	}
+
+	async getCampaignsOverview(projectId: string) {
+		const campaigns = await prisma.campaign.findMany({
+			where: { projectId },
+			select: {
+				clicks: true,
+				conversions: true,
+				sales: true,
+				investmentTotal: true,
+			},
+		});
+
+		const totalClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0);
+		const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0);
+		const totalSales = campaigns.reduce((sum, c) => sum + c.sales, 0);
+		const totalInvestment = campaigns.reduce((sum, c) => sum + Number(c.investmentTotal), 0);
+
+		return {
+			totalClicks,
+			totalConversions,
+			totalSales,
+			totalInvestment,
+		};
+	}
 }
 
 export const projectRepository = new ProjectRepository();

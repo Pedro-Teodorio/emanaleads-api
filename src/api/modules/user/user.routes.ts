@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { userController } from './user.controller';
 import { validateRequest } from '../../middlewares/validateRequest';
-import { createUserSchema, updateUserSchema, listUsersQuerySchema, deleteUserParamsSchema } from './user.validation';
+import { createUserSchema, updateUserSchema, listUsersQuerySchema, deleteUserParamsSchema, resetPasswordSchema } from './user.validation';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validateRole } from '../../middlewares/validateRole.middleware'; // Importe o validateRole
 
@@ -51,5 +51,9 @@ router.delete(
 	validateRequest(deleteUserParamsSchema), // 3. Param id válido?
 	userController.deleteUser,
 );
+
+// Rota POST /users/:id/reset-password (Resetar senha de usuário)
+// Regra: ROOT e ADMIN podem resetar senhas
+router.post('/:id/reset-password', authMiddleware, validateRole(['ROOT', 'ADMIN']), validateRequest(resetPasswordSchema), userController.resetPassword);
 
 export const userRoutes = router;

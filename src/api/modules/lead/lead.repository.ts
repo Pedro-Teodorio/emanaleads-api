@@ -2,6 +2,12 @@ import { prisma } from '../../../config/prisma';
 import { Prisma, LeadStatus } from '@prisma/client';
 import { ListLeadsQueryData, CreateLeadData, UpdateLeadData } from './lead.validation';
 
+// Tipo interno garantindo que projectId e assignedUserId foram resolvidos
+type ResolvedLeadData = CreateLeadData & {
+	projectId: string;
+	assignedUserId: string;
+};
+
 const leadSelect = {
 	id: true,
 	name: true,
@@ -17,7 +23,7 @@ const leadSelect = {
 };
 
 export class LeadRepository {
-	async create(data: CreateLeadData) {
+	async create(data: ResolvedLeadData) {
 		return prisma.lead.create({
 			data: {
 				name: data.name,
@@ -99,11 +105,7 @@ export class LeadRepository {
 	private applySearchFilter(where: Prisma.LeadWhereInput, filters: ListLeadsQueryData) {
 		if (filters.search?.trim()) {
 			const s = filters.search.trim();
-			where.OR = [
-				{ name: { contains: s, mode: 'insensitive' } },
-				{ email: { contains: s, mode: 'insensitive' } },
-				{ phone: { contains: s, mode: 'insensitive' } },
-			];
+			where.OR = [{ name: { contains: s, mode: 'insensitive' } }, { email: { contains: s, mode: 'insensitive' } }, { phone: { contains: s, mode: 'insensitive' } }];
 		}
 	}
 
@@ -164,6 +166,41 @@ export class LeadRepository {
 				totalPages: Math.ceil(total / limit) || 1,
 			},
 		};
+	}
+
+	/**
+	 * Lista leads para exportação CSV sem paginação
+	 * Inclui relações project e assignedUser para nomes
+	 * Limite de 50.001 registros para validação soft
+	 */
+	async listForExport(filters: Omit<ListLeadsQueryData, 'page' | 'limit'>) {
+		const where = this.buildWhere(filters as ListLeadsQueryData);
+		const orderBy = this.getOrderBy(filters as ListLeadsQueryData);
+
+		const leads = await prisma.lead.findMany({
+			where,
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				phone: true,
+				position: true,
+				requestType: true,
+				status: true,
+				createdAt: true,
+				updatedAt: true,
+				project: {
+					select: { name: true },
+				},
+				assignedUser: {
+					select: { name: true },
+				},
+			},
+			orderBy,
+			take: 50001, // Limite soft: busca 50.001 para validar se excedeu 50k
+		});
+
+		return leads;
 	}
 
 	update(id: string, data: UpdateLeadData) {

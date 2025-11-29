@@ -19,8 +19,8 @@ class ProjectController {
 	 */
 	async listProjectsAsRoot(req: Request, res: Response, next: NextFunction) {
 		try {
-			const page = parseInt(req.query.page as string) || 1;
-			const limit = parseInt(req.query.limit as string) || 10;
+			const page = Number.parseInt(req.query.page as string) || 1;
+			const limit = Number.parseInt(req.query.limit as string) || 10;
 			const search = req.query.search as string;
 			const status = req.query.status as string | undefined;
 
@@ -37,6 +37,44 @@ class ProjectController {
 	async listRecentProjects(req: Request, res: Response, next: NextFunction) {
 		try {
 			const projects = await projectService.listRecentProjects();
+			res.status(200).json(projects);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
+	 * [ROOT/ADMIN] Busca um projeto específico
+	 */
+	async getById(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { projectId } = req.params;
+			const project = await projectService.getById(projectId, req.user!);
+			res.status(200).json(project);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
+	 * [ROOT/ADMIN] Busca métricas de um projeto
+	 */
+	async getMetrics(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { projectId } = req.params;
+			const metrics = await projectService.getMetrics(projectId, req.user!);
+			res.status(200).json(metrics);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
+	 * [ADMIN] Lista projetos administrados pelo usuário atual
+	 */
+	async listProjectsAsAdmin(req: Request, res: Response, next: NextFunction) {
+		try {
+			const projects = await projectService.listProjectsAsAdmin(req.user!.id);
 			res.status(200).json(projects);
 		} catch (error) {
 			next(error);
@@ -89,6 +127,19 @@ class ProjectController {
 			const { projectId } = req.params;
 			const users = await projectService.listProjectUsers(projectId, req.user!.id);
 			res.status(200).json(users);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
+	 * [ADMIN] Cria novo PROJECT_USER e adiciona como membro
+	 */
+	async createAndAddMember(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { projectId } = req.params;
+			const member = await projectService.createAndAddMember(projectId, req.body, req.user!.id);
+			res.status(201).json(member);
 		} catch (error) {
 			next(error);
 		}

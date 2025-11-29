@@ -3,6 +3,12 @@ import { ApiError } from '../../../utils/ApiError';
 import { AddMemberData, CreateProjectData, UpdateProjectData } from './project.validation';
 import { projectRepository } from './project.repository';
 import { userRepository } from '../user/user.repository';
+import { tokenService } from '../../../utils/token.service';
+import { emailService } from '../../../utils/email.service';
+import { logger } from '../../../utils/logger';
+import bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 10;
 
 class ProjectService {
 	async create(data: CreateProjectData) {
@@ -26,10 +32,7 @@ class ProjectService {
 			where.status = statusFilter as ProjectStatus;
 		}
 
-		const [projects, total] = await Promise.all([
-			projectRepository.list(where, page, limit),
-			projectRepository.count(where),
-		]);
+		const [projects, total] = await Promise.all([projectRepository.list(where, page, limit), projectRepository.count(where)]);
 
 		return {
 			data: projects,
@@ -44,6 +47,13 @@ class ProjectService {
 
 	async listRecentProjects() {
 		return projectRepository.listRecent();
+	}
+
+	async listProjectsAsAdmin(adminId: string) {
+		// Lista todos os projetos onde adminId === current user
+		const where: Prisma.ProjectWhereInput = { adminId };
+		const [projects, total] = await Promise.all([projectRepository.list(where, 1, 1000), projectRepository.count(where)]);
+		return { data: projects, meta: { total, page: 1, limit: 1000, totalPages: 1 } };
 	}
 
 	async update(data: UpdateProjectData, projectId: string) {
@@ -131,8 +141,61 @@ class ProjectService {
 
 		const members = await projectRepository.listMembers(projectId);
 
-		
 		return { admin: project.adminId, members };
+	}
+
+	async createAndAddMember(projectId: string, userData: { name: string; email: string; phone?: string; password?: string }, currentAdminId: string) {
+		const project = await projectRepository.findUnique({ where: { id: projectId } });
+
+		if (!project) {
+			throw new ApiError(404, 'Projeto não encontrado.');
+		}
+
+		if (project.adminId !== currentAdminId) {
+			throw new ApiError(403, 'Acesso negado. Você não é o administrador deste projeto.');
+		}
+
+		const existingUser = await userRepository.findByEmail(userData.email);
+		if (existingUser) {
+			throw new ApiError(400, 'Já existe um usuário com este email.');
+		}
+
+		// Se senha não fornecida, criar usuário com password null (requer ativação posterior)
+		const hashedPassword = userData.password ? await bcrypt.hash(userData.password, SALT_ROUNDS) : null;
+
+		const newUser = await userRepository.create(
+			{
+				name: userData.name,
+				email: userData.email,
+				phone: userData.phone,
+				role: SystemRole.PROJECT_USER,
+				status: 'ACTIVE',
+			},
+			hashedPassword,
+		);
+
+		const member = await projectRepository.addMember({
+			projectId,
+			userId: newUser.id,
+		});
+
+		// Se senha não foi fornecida, enviar email de ativação
+		if (userData.password) {
+			try {
+				await emailService.sendWelcomeEmail(newUser.email, newUser.name);
+			} catch (error) {
+				logger.error({ err: error, email: newUser.email }, 'Erro ao enviar email de boas-vindas');
+			}
+		} else {
+			try {
+				const activationToken = await tokenService.createActivationToken(newUser.id);
+				await emailService.sendActivationEmail(newUser.email, activationToken, newUser.name);
+			} catch (error) {
+				logger.error({ err: error, email: newUser.email }, 'Erro ao enviar email de ativação');
+			}
+		}
+
+		return member;
 	}
 
 	removeMember = async (projectId: string, memberId: string, currentAdminId: string) => {
@@ -159,6 +222,58 @@ class ProjectService {
 
 		return { message: 'Membro removido do projeto com sucesso.' };
 	};
+
+	async getById(projectId: string, user: { id: string; role: SystemRole }) {
+		const project = await projectRepository.findUnique({
+			where: { id: projectId },
+			include: {
+				admin: {
+					select: { id: true, name: true, email: true, role: true },
+				},
+			},
+		});
+
+		if (!project) {
+			throw new ApiError(404, 'Projeto não encontrado.');
+		}
+
+		// ROOT pode ver qualquer projeto, ADMIN só o próprio
+		if (user.role !== SystemRole.ROOT && project.adminId !== user.id) {
+			throw new ApiError(403, 'Acesso negado.');
+		}
+
+		return project;
+	}
+
+	async getMetrics(projectId: string, user: { id: string; role: SystemRole }) {
+		const project = await projectRepository.findUnique({ where: { id: projectId } });
+
+		if (!project) {
+			throw new ApiError(404, 'Projeto não encontrado.');
+		}
+
+		// ROOT pode ver qualquer projeto, ADMIN só o próprio
+		if (user.role !== SystemRole.ROOT && project.adminId !== user.id) {
+			throw new ApiError(403, 'Acesso negado.');
+		}
+
+		// Buscar métricas do projeto
+		const [totalMembers, totalCampaigns, totalLeads, leadsStatusDistribution, campaignsData] = await Promise.all([
+			projectRepository.countMembers(projectId),
+			projectRepository.countCampaigns(projectId),
+			projectRepository.countLeads(projectId),
+			projectRepository.getLeadsStatusDistribution(projectId),
+			projectRepository.getCampaignsOverview(projectId),
+		]);
+
+		return {
+			totalMembers,
+			totalCampaigns,
+			totalLeads,
+			leadsStatusDistribution,
+			campaignsOverview: campaignsData,
+		};
+	}
 }
 
 export const projectService = new ProjectService();

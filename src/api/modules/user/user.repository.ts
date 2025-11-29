@@ -24,11 +24,11 @@ class UserRepository {
 		});
 	}
 
-	create(data: CreateUserData, hashedPassword?: string) {
+	create(data: CreateUserData, hashedPassword?: string | null) {
 		return prisma.user.create({
 			data: {
 				...data,
-				password: hashedPassword,
+				password: hashedPassword ?? undefined,
 			},
 			select: {
 				id: true,
@@ -84,6 +84,13 @@ class UserRepository {
 	delete(userId: string) {
 		return prisma.user.delete({
 			where: { id: userId },
+		});
+	}
+
+	updatePassword(userId: string, hashedPassword: string) {
+		return prisma.user.update({
+			where: { id: userId },
+			data: { password: hashedPassword },
 		});
 	}
 }

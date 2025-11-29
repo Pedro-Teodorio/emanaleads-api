@@ -15,8 +15,8 @@ export const createLeadSchema = z.object({
 			phone: z.string().optional(),
 			position: z.string().optional(), // cargo
 			requestType: z.string().optional(), // tipo de serviço solicitado
-			projectId: z.uuid('Formato inválido para projectId'),
-			assignedUserId: z.uuid('Formato inválido para assignedUserId').optional(),
+			projectId: z.uuid('Formato inválido para projectId').optional(), // inferido se omitido
+			assignedUserId: z.uuid('Formato inválido para assignedUserId').optional(), // inferido se omitido
 			status: z.enum(LeadStatus).optional(), // opcional, default via modelo
 		})
 		.superRefine((val, ctx) => {
@@ -118,8 +118,14 @@ export const leadIdParamSchema = z.object({
 // Poderemos futuramente expor histórico dedicado
 export const leadHistoryParamsSchema = leadIdParamSchema;
 
+// Schema de exportação: reutiliza filtros de listagem mas sem paginação
+export const exportLeadsSchema = z.object({
+	query: listLeadsQuerySchema.shape.query.omit({ page: true, limit: true }),
+});
+
 export type CreateLeadData = z.infer<typeof createLeadSchema>['body'];
 export type UpdateLeadData = z.infer<typeof updateLeadSchema>['body'];
 export type UpdateLeadStatusData = z.infer<typeof updateLeadStatusSchema>['body'];
 export type ListLeadsQueryData = z.infer<typeof listLeadsQuerySchema>['query'];
+export type ExportLeadsQueryData = z.infer<typeof exportLeadsSchema>['query'];
 export type LeadIdParams = z.infer<typeof leadIdParamSchema>['params'];

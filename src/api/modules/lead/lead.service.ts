@@ -1,6 +1,6 @@
 import { LeadStatus } from '@prisma/client';
 import { leadRepository } from './lead.repository';
-import { CreateLeadData, UpdateLeadData, UpdateLeadStatusData, ListLeadsQueryData } from './lead.validation';
+import { CreateLeadData, UpdateLeadData, UpdateLeadStatusData, ListLeadsQueryData, ExportLeadsQueryData } from './lead.validation';
 import { prisma } from '../../../config/prisma';
 import { ApiError } from '../../../utils/ApiError';
 
@@ -15,7 +15,50 @@ const allowedTransitions: Record<LeadStatus, LeadStatus[]> = {
 
 class LeadService {
 	async create(data: CreateLeadData, currentUser: { id: string; role: string }) {
-		const project = await prisma.project.findUnique({ where: { id: data.projectId }, select: { id: true, status: true, adminId: true } });
+		// Inferir projectId e assignedUserId do contexto se não fornecidos
+		const projectId = await this.inferProjectId(data.projectId, currentUser);
+		const assignedUserId = data.assignedUserId || currentUser.id;
+
+		const project = await this.validateProjectAccess(projectId, currentUser);
+
+		const duplicate = await leadRepository.findDuplicateInProject(project.id, data.email, data.phone);
+		if (duplicate) throw new ApiError(409, 'Lead duplicado no projeto');
+
+		const lead = await leadRepository.create({ ...data, projectId, assignedUserId });
+		await leadRepository.addHistory(lead.id, null, lead.status, currentUser.id, null);
+		return lead;
+	}
+
+	private async inferProjectId(providedProjectId: string | undefined, currentUser: { id: string; role: string }): Promise<string> {
+		if (providedProjectId) return providedProjectId;
+
+		if (currentUser.role === 'ROOT') {
+			throw new ApiError(400, 'ROOT deve especificar projectId explicitamente');
+		}
+
+		if (currentUser.role === 'ADMIN') {
+			const adminProject = await prisma.project.findFirst({
+				where: { adminId: currentUser.id, status: 'ACTIVE' },
+				select: { id: true },
+			});
+			if (!adminProject) throw new ApiError(422, 'Nenhum projeto ativo encontrado para este administrador');
+			return adminProject.id;
+		}
+
+		if (currentUser.role === 'PROJECT_USER') {
+			const membership = await prisma.projectMember.findFirst({
+				where: { userId: currentUser.id, project: { status: 'ACTIVE' } },
+				select: { projectId: true },
+			});
+			if (!membership) throw new ApiError(422, 'Usuário não é membro de nenhum projeto ativo');
+			return membership.projectId;
+		}
+
+		throw new ApiError(403, 'Perfil não autorizado');
+	}
+
+	private async validateProjectAccess(projectId: string, currentUser: { id: string; role: string }) {
+		const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true, status: true, adminId: true } });
 		if (!project) throw new ApiError(404, 'Projeto não encontrado');
 		if (project.status !== 'ACTIVE') throw new ApiError(422, 'Projeto não está ativo para criação de leads');
 
@@ -27,12 +70,7 @@ class LeadService {
 			if (!membership) throw new ApiError(403, 'Usuário não é membro do projeto');
 		}
 
-		const duplicate = await leadRepository.findDuplicateInProject(project.id, data.email, data.phone);
-		if (duplicate) throw new ApiError(409, 'Lead duplicado no projeto');
-
-		const lead = await leadRepository.create(data);
-		await leadRepository.addHistory(lead.id, null, lead.status , currentUser.id, null);
-		return lead;
+		return project;
 	}
 
 	async getById(id: string, currentUser: { id: string; role: string }) {
@@ -43,14 +81,12 @@ class LeadService {
 	}
 
 	async list(filters: ListLeadsQueryData, currentUser: { id: string; role: string }) {
-		const result = await leadRepository.list(filters);
 		if (currentUser.role === 'PROJECT_USER') {
-			return {
-				data: result.data.filter((l) => l.assignedUserId === currentUser.id),
-				meta: result.meta,
-			};
+			// Aplicar filtro no banco para garantir paginação consistente
+			const filtered = await leadRepository.list({ ...filters, assignedUserId: currentUser.id } as any);
+			return filtered;
 		}
-		return result;
+		return await leadRepository.list(filters);
 	}
 
 	async update(id: string, data: UpdateLeadData, currentUser: { id: string; role: string }) {
@@ -102,6 +138,27 @@ class LeadService {
 			return;
 		}
 		throw new ApiError(403, 'Perfil não autorizado');
+	}
+
+	/**
+	 * Exporta leads em CSV aplicando mesmos filtros e RBAC do list
+	 * Limite soft de 50.000 registros
+	 */
+	async exportCSV(filters: ExportLeadsQueryData, currentUser: { id: string; role: string }) {
+		// Aplica mesma lógica de RBAC do método list
+		const adjustedFilters = { ...filters } as any;
+		if (currentUser.role === 'PROJECT_USER') {
+			adjustedFilters.assignedUserId = currentUser.id;
+		}
+
+		const leads = await leadRepository.listForExport(adjustedFilters);
+
+		// Valida limite soft de 50.000 registros
+		if (leads.length > 50000) {
+			throw new ApiError(400, 'Exportação limitada a 50.000 registros. Aplique filtros mais específicos para reduzir o volume.');
+		}
+
+		return leads;
 	}
 }
 
