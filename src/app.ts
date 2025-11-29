@@ -9,7 +9,6 @@ import { metricsMiddleware } from './api/middlewares/metrics.middleware';
 const app = express();
 
 const corsOptions = {
-	origin: 'http://localhost:3000',
 	credentials: true,
 };
 
