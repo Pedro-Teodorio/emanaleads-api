@@ -62,7 +62,7 @@ class EmailService {
 
 	async sendActivationEmail(to: string, activationToken: string, userName: string) {
 		if (!this.isConfigured()) {
-			logger.warn(`Email de ativacao nao enviado para ${to} (servico nao configurado)`);
+			logger.warn(`Email de ativação não enviado para ${to} (serviço não configurado)`);
 			return;
 		}
 
