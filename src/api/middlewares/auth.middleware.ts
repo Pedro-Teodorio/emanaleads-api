@@ -13,15 +13,23 @@ declare global {
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-	const authCookie = req.cookies['auth-token'];
+	const authHeader = req.headers.authorization;
 
-	if (!authCookie) {
-		return next(new ApiError(401, 'Token não fornecido'));
+	if (!authHeader) {
+		return next(new ApiError(401, 'Token de autenticação não fornecido'));
 	}
 
-	jwt.verify(authCookie, env.JWT_SECRET, (err: jwt.VerifyErrors | null, decoded: any) => {
+	const parts = authHeader.split(' ');
+
+	if (parts.length !== 2 || parts[0] !== 'Bearer') {
+		return next(new ApiError(401, 'Token malformado'));
+	}
+
+	const token = parts[1];
+
+	jwt.verify(token, env.JWT_SECRET, (err: jwt.VerifyErrors | null, decoded: any) => {
 		if (err) {
-			return next(new ApiError(401, 'Token inválido'));
+			return next(new ApiError(401, 'Token inválido ou expirado'));
 		}
 
 		req.user = decoded as { id: string; email: string; role: SystemRole };

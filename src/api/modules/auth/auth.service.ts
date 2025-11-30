@@ -40,7 +40,9 @@ class AuthService {
 			expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
 		});
 
-		return { token };
+		const { password, ...userToReturn } = user;
+
+		return { token, user: userToReturn };
 	}
 
 	async changePassword(userId: string, data: ChangePasswordData) {

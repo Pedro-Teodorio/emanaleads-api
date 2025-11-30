@@ -13,11 +13,9 @@ const allowedOrigins = [env.FRONTEND_URL || 'https://emanaleads-app.vercel.app',
 
 const corsOptions = {
 	origin: allowedOrigins,
-	credentials: true,
 };
 
 app.use(cors(corsOptions));
-app.use(cookieParser());
 app.use(express.json());
 app.use(metricsMiddleware);
 app.use(requestLogger);
