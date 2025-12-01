@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { apiRoutes } from './api/routes';
 import { errorHandler } from './api/middlewares/errorHandler';
@@ -29,12 +28,6 @@ app.use((req, res, next) => {
 	next();
 });
 
-const corsOptions = {
-	origin: allowedOrigins,
-	credentials: true,
-};
-
-app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(metricsMiddleware);
