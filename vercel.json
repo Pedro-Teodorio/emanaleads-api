@@ -11,10 +11,6 @@
 			"source": "/(.*)",
 			"headers": [
 				{
-					"key": "Access-Control-Allow-Credentials",
-					"value": "true"
-				},
-				{
 					"key": "Access-Control-Allow-Origin",
 					"value": "https://emanaleads-app.vercel.app"
 				},
@@ -24,11 +20,7 @@
 				},
 				{
 					"key": "Access-Control-Allow-Headers",
-					"value": "Content-Type, Authorization, Cookie"
-				},
-				{
-					"key": "Access-Control-Expose-Headers",
-					"value": "Set-Cookie"
+					"value": "Content-Type, Authorization"
 				},
 				{
 					"key": "Vary",
