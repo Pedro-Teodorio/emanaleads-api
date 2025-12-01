@@ -17,6 +17,9 @@ const envSchema = z.object({
 	SMTP_USER: z.string().optional(),
 	SMTP_PASS: z.string().optional(),
 	APP_URL: z.string().optional(),
+	// Links de termos e privacidade (opcionais)
+	TERMS_URL: z.string().optional(),
+	PRIVACY_URL: z.string().optional(),
 	// Frontend origin para CORS e domínio do cookie em produção
 	FRONTEND_URL: z.string().optional(),
 	COOKIE_DOMAIN: z.string().optional(),

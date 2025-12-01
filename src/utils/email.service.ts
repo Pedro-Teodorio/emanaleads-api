@@ -67,6 +67,8 @@ class EmailService {
 		}
 
 		const activationUrl = `${env.APP_URL}/activate/${activationToken}`;
+		const termsUrl = env.TERMS_URL || (env.APP_URL ? `${env.APP_URL}/terms` : '#');
+		const privacyUrl = env.PRIVACY_URL || (env.APP_URL ? `${env.APP_URL}/privacy` : '#');
 
 		try {
 			await this.transporter!.sendMail({
@@ -82,6 +84,12 @@ class EmailService {
 							Ativar Conta
 						</a>
 						<p style="color: #666; font-size: 14px;">Este link é válido por 7 dias.</p>
+						<p style="color: #666; font-size: 13px; line-height: 1.5;">
+							Ao clicar em "Ativar Conta" você está aceitando nossos
+							<a href="${termsUrl}" style="color: #007bff; text-decoration: none;">Termos de Uso</a>
+							e nossa
+							<a href="${privacyUrl}" style="color: #007bff; text-decoration: none;">Política de Privacidade</a>.
+						</p>
 						<hr style="margin: 24px 0; border: none; border-top: 1px solid #ddd;">
 						<p style="color: #999; font-size: 12px;">Emanaleads - Sistema de Gestão de Leads</p>
 					</div>
