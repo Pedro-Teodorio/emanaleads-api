@@ -14,25 +14,23 @@ const allowedOrigins = ['https://emanaleads-app.vercel.app', 'http://localhost:3
 app.use((req, res, next) => {
 	const origin = req.headers.origin;
 
-	// Sempre permitir a origem se estiver na lista
+	// CRÍTICO: Access-Control-Allow-Origin DEVE ser enviado quando Access-Control-Allow-Credentials: true
 	if (origin && allowedOrigins.includes(origin)) {
 		res.setHeader('Access-Control-Allow-Origin', origin);
-	}
-
-	// SEMPRE enviar Access-Control-Allow-Credentials
-	res.setHeader('Access-Control-Allow-Credentials', 'true');
-	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
-	res.setHeader('Access-Control-Expose-Headers', 'Set-Cookie');
-
-	// Log para debug (remover depois)
-	if (env.NODE_ENV === 'production') {
-		console.log('[CORS] Origin:', origin, '| Allowed:', allowedOrigins.includes(origin || ''));
+		res.setHeader('Access-Control-Allow-Credentials', 'true');
+		res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+		res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+		res.setHeader('Access-Control-Expose-Headers', 'Set-Cookie');
+		res.setHeader('Vary', 'Origin'); // Importante para cache correto
+	} else {
+		// Se origem não permitida, não enviar credentials
+		console.log('[CORS] Origin não permitida:', origin);
 	}
 
 	// Responder OPTIONS imediatamente
 	if (req.method === 'OPTIONS') {
-		return res.status(200).end();
+		res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24h
+		return res.status(204).end();
 	}
 
 	next();
