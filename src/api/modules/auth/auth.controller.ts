@@ -9,12 +9,20 @@ class AuthController {
 
 			const isProduction = env.NODE_ENV === 'production';
 
-			res.cookie('auth-token', token, {
+			// Em produção, usar sameSite: 'none' com partitioned para cross-site
+			const cookieOptions: any = {
 				httpOnly: true,
 				secure: isProduction,
 				sameSite: isProduction ? 'none' : 'lax',
 				maxAge: 7 * 24 * 60 * 60 * 1000,
-			});
+			};
+
+			// Adicionar partitioned para cookies cross-site (Chrome/Edge moderno)
+			if (isProduction) {
+				res.setHeader('Set-Cookie', `auth-token=${token}; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=${7 * 24 * 60 * 60}; Path=/`);
+			} else {
+				res.cookie('auth-token', token, cookieOptions);
+			}
 
 			res.status(200).json({ user });
 		} catch (error) {
@@ -26,11 +34,15 @@ class AuthController {
 		try {
 			const isProduction = env.NODE_ENV === 'production';
 
-			res.clearCookie('auth-token', {
-				httpOnly: true,
-				secure: isProduction,
-				sameSite: isProduction ? 'none' : 'lax',
-			});
+			if (isProduction) {
+				res.setHeader('Set-Cookie', 'auth-token=; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=0; Path=/');
+			} else {
+				res.clearCookie('auth-token', {
+					httpOnly: true,
+					secure: isProduction,
+					sameSite: isProduction ? 'none' : 'lax',
+				});
+			}
 
 			res.status(200).json({ message: 'Logout realizado com sucesso' });
 		} catch (error) {
