@@ -13,19 +13,23 @@ declare global {
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-	const authHeader = req.headers.authorization;
+	let token = req.cookies?.['auth-token'];
 
-	if (!authHeader) {
+	if (!token) {
+		const authHeader = req.headers.authorization;
+
+		if (authHeader) {
+			const parts = authHeader.split(' ');
+
+			if (parts.length === 2 && parts[0] === 'Bearer') {
+				token = parts[1];
+			}
+		}
+	}
+
+	if (!token) {
 		return next(new ApiError(401, 'Token de autenticação não fornecido'));
 	}
-
-	const parts = authHeader.split(' ');
-
-	if (parts.length !== 2 || parts[0] !== 'Bearer') {
-		return next(new ApiError(401, 'Token malformado'));
-	}
-
-	const token = parts[1];
 
 	jwt.verify(token, env.JWT_SECRET, (err: jwt.VerifyErrors | null, decoded: any) => {
 		if (err) {
