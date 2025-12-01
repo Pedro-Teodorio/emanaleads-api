@@ -5,5 +5,20 @@
 			"source": "/(.*)",
 			"destination": "/api"
 		}
-	]
+	],
+ "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://emanaleads-app.vercel.app"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ]
+    }
+  ]
 }
