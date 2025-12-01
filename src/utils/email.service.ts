@@ -80,7 +80,7 @@ class EmailService {
 						<h2>Bem-vindo ao Emanaleads, ${userName}!</h2>
 						<p>Sua conta foi criada com sucesso. Para começar a usar o sistema, você precisa definir sua senha.</p>
 						<p>Clique no link abaixo para ativar sua conta:</p>
-						<a href="${activationUrl}" style="display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; margin: 16px 0;">
+						<a href="${activationUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px; margin: 16px 0;">
 							Ativar Conta
 						</a>
 						<p style="color: #666; font-size: 14px;">Este link é válido por 7 dias.</p>
