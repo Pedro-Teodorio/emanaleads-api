@@ -6,19 +6,35 @@
 			"destination": "/api"
 		}
 	],
- "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "https://emanaleads-app.vercel.app"
-        },
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        }
-      ]
-    }
-  ]
+	"headers": [
+		{
+			"source": "/(.*)",
+			"headers": [
+				{
+					"key": "Access-Control-Allow-Credentials",
+					"value": "true"
+				},
+				{
+					"key": "Access-Control-Allow-Origin",
+					"value": "https://emanaleads-app.vercel.app"
+				},
+				{
+					"key": "Access-Control-Allow-Methods",
+					"value": "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+				},
+				{
+					"key": "Access-Control-Allow-Headers",
+					"value": "Content-Type, Authorization, Cookie"
+				},
+				{
+					"key": "Access-Control-Expose-Headers",
+					"value": "Set-Cookie"
+				},
+				{
+					"key": "Vary",
+					"value": "Origin"
+				}
+			]
+		}
+	]
 }
